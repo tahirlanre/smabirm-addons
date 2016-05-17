@@ -26,7 +26,14 @@
     'sequence': 6,
     'summary': '',
     'description': """
-
+        - Custom receipt
+        - Silent receipt printing
+        - POS credit sales
+        - Immediate POS sales posting
+        - Custom POS Details of Sales Report
+        - Debtors Report
+        - Credit limit in POS sales
+        
     """,
     'author': 'Tahir Aduragba',
    
