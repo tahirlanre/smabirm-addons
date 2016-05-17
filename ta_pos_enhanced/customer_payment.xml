@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<openerp>
+    <data>
+        <template id="assets_backend" name="point_of_sale assets2" inherit_id="web.assets_backend">
+            <xpath expr="." position="inside">
+                <script type="text/javascript" src="/ta_pos_enhanced/static/src/js/pos_enhanced.js"></script>
+            </xpath>
+        </template>
+        <template id="index" name="pos_customer_payment index" inherit_id="point_of_sale.index">
+            <xpath expr="//link[@id='pos-stylesheet']" position="after">
+                <link rel="stylesheet" href="/ta_pos_enhanced/static/src/css/pos_enhanced.css" id="pos_customer_display-stylesheet"/>
+            </xpath>
+        </template>
+    </data>
+</openerp>

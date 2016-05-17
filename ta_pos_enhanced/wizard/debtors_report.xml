@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="utf-8"?>
+<openerp>
+    <data>
+        <!--   pos.details -->
+
+        <record id="view_debtors_report" model="ir.ui.view">
+            <field name="name">Debtors Report</field>
+            <field name="model">pos.debtors</field>
+            <field name="arch" type="xml">
+                <form string="Debtors Report">
+                    <group col="4" string="Dates">
+                        <field name="date_start"/>
+                        <field name="date_end"/>
+                    </group>
+                    
+                    <footer>
+                        <button name="print_report" type="object" string="Print Report" class="oe_highlight"/>
+                        or
+                        <button string="Cancel" class="oe_link" special="cancel"/>
+                    </footer>
+                </form>
+            </field>
+        </record>
+
+
+        <record id="action_report_debtors_report" model="ir.actions.act_window">
+            <field name="name">Debtors Report</field>
+            <field name="type">ir.actions.act_window</field>
+            <field name="res_model">pos.debtors</field>
+            <field name="view_type">form</field>
+            <field name="view_mode">form</field>
+            <field name="target">new</field>
+        </record>
+
+        <menuitem icon="STOCK_PRINT" action="action_report_debtors_report"
+                id="menu_debtors_report" parent="point_of_sale.menu_point_rep" sequence="6" />
+        
+    </data>
+</openerp>

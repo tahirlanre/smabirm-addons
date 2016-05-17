@@ -1,0 +1,77 @@
+<?xml version="1.0"?>
+<openerp>
+  <data>
+
+    <!-- Action to open To-do Task list -->
+    <act_window id="action_pos_payment"
+      name="Customer Payments"
+      res_model="pos.customer.payment"
+      view_mode="tree" />
+
+    <!-- Menu item to open To-do Task list -->
+    <menuitem id="menu _pos_payment"
+      name="Customer Payments"
+      parent="point_of_sale.menu_point_of_sale"
+      sequence="20"
+      action="action_pos_payment" />
+
+
+
+    
+    <record id="view_tree_pos_payment" model="ir.ui.view">
+        <field name="name">POS Payment Tree</field>
+        <field name="model">pos.customer.payment</field>
+        <field name="arch" type="xml">
+        <tree create = "false">
+            <field name="payment_date" readonly="1"/>
+            <!--<field name="payment_name" readonly="1"/>!-->
+            <field name="partner_id" readonly="1"/>
+            <field name="journal_id" readonly="1"/>
+            <field name="amount" readonly="1"/>
+        </tree>
+        </field>
+    </record>
+
+
+    
+    <record id="view_pos_config_form" model="ir.ui.view">
+            <field name="name">pos.config.form.view</field>
+            <field name="model">pos.config</field>
+            <field name="inherit_id" ref="point_of_sale.view_pos_config_form"/>
+            <field name="arch" type="xml">
+                <field name="name" position="after">
+                    <field name="default_user"/>
+                </field>
+                <xpath expr="//group[@string='Features']" position="inside">
+                    <group string="Restrictions">
+                        <field name="discount_restriction" />
+                        <field name="max_discount"  attrs="{'invisible':[('discount_restriction','=',False)]}"/>
+                    </group>
+                </xpath>
+            </field>
+    </record>
+	
+	<record id="view_partner_form_credit_limit" model="ir.ui.view">
+	    <field name="name">res.partner.form.credit.limit</field>
+	    <field name="model">res.partner</field>
+	    <field name="inherit_id" ref="account.view_partner_property_form"/>
+	    <field name="arch" type="xml">
+            <field name="credit_limit" position="attributes">
+                <attribute name="attrs">{'invisible':[('credit_limit_restriction','=',False)]}</attribute>
+            </field>
+	        <field name="credit_limit" position="before">
+	            <field name="credit_limit_restriction"/>
+	        </field>
+	    </field>
+	</record>
+    
+    <report id="point_of_sale_debtors_report"
+
+                string="Debtors Report Qweb"
+                model="pos.debtors"
+                report_type = "qweb-pdf"
+                file="ta_pos_enhanced.report_debtorsreport"
+                name="ta_pos_enhanced.report_debtorsreport"  />
+    
+  </data>
+</openerp>

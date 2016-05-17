@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<openerp> 
+    <data>
+
+        <template id="report_stock_move_qweb">
+            <t t-call="report.html_container"> 
+                <t t-foreach="docs" t-as="o"> 
+                    <t t-call="report.external_layout">
+                        <div class="page">
+                            <div class="oe_structure"/>
+                            <div class="row">
+                                <span class="text-center"><h1>Stock Moves</h1></span>
+                                <table class="table table condensed">
+                                   
+                                    <tr>
+                                        <td><h3><strong>First Name:</strong></h3></td>
+                                        <td><h3 t-field="o.name"/></td>
+                                    </tr>
+                            
+                                </table>
+                            </div>
+                        </div>
+                    </t>
+                </t>
+            </t> 
+        </template>
+
+    </data>
+</openerp>

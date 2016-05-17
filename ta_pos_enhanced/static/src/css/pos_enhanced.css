@@ -1,0 +1,126 @@
+.pos .customer-payment {
+    width: 220px;
+    height: 45px;
+    font-size: 16px;
+    cursor: pointer;
+    text-align: center;
+    box-sizing: border-box;
+   display: inline-block;
+    vertical-align: top;
+    margin-left: 60px;
+	color: white;
+    background-color: rgb(110,200,155);
+}
+.pos .modal-dialog .popup{
+    position: absolute;
+    left:50%;
+    top:50%;
+    width:450px;
+    height:200px;
+    margin-left: -250px;
+    margin-top: -200px;
+    padding:10px;
+    padding-top:20px;
+    text-align:center;
+    font-size:20px;
+    font-weight:bold;
+    background-color: #F0EEEE;
+    border-radius: 3px;
+    box-shadow: 0px 10px 20px rgba(0,0,0,0.4);
+    z-index:1200;
+}
+
+.pos .div > right {
+    text-align: right;
+}
+
+.pos .div > center {
+    text-align: center;
+}
+
+
+.pos .customer-payment-div {
+
+    display: inline-block;
+    max-width: 640px;
+    max-height: 48px;
+    white-space: nowrap;
+    overflow: hidden;
+    overflow-x: auto;
+    
+}
+
+.ticket_head_lines{
+    font-size: 110%;
+    font-weight: bold;
+    text-transform: uppercase;  
+    border-bottom: 1px solid black;
+	border-top: 1px solid black;
+}
+
+.pos .pos-center-receipt-heading {
+    text-align: center;
+    font-weight: bold;
+}
+
+.pos .pos-center-receipt-address {
+    text-align: center;
+    font-size: 90%;
+}
+
+.pos .clientlist-screen .client-detail > .client-debt.positive{
+    color: red;
+}
+
+.pos .clientlist-screen .client-detail > .client-debt.negative{
+    color: green;
+}
+
+@page {
+    margin: 0;
+}
+
+/* [antoniov] 2014-12-04: removed printed margin with @page directive */
+@media print {
+	@page { margin: 0; }  
+    .point-of-sale #topheader, .point-of-sale #leftpane {
+        display: none !important;
+    }
+    .point-of-sale #content {
+        top: 0px !important;
+    }
+    .point-of-sale #rightpane {
+        left: 0px !important;
+        background-color: white;
+    }
+    #receipt-screen header {
+        display: none !important;
+    }
+    #receipt-screen {
+        text-align: left;
+    }
+    .pos-actionbar {
+        display: none !important;
+    }
+    .pos-sale-ticket {
+        margin-left: 0;
+        margin-right: 0;
+		font-size: 85%;
+    }
+    .debug-widget{
+        display: none !important;
+    }
+    .point-of-sale *{
+        text-shadow: none !important;
+        box-shadow: none !important;
+        background: transparent !important;
+    }
+    /* [antoniov] 2014-12-04: set darker color & no border */
+    /* border: solid 1px black !important; */
+    .point-of-sale .pos-sale-ticket{
+        margin-left: 0;
+        margin-right: 0;
+        color: #000000;
+    }
+}
+
