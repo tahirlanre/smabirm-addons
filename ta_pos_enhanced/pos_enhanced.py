@@ -239,7 +239,7 @@ class res_partner(models.Model):
     def _get_balance(self):
         for partner in self:
             partner.balance = self.credit - self.debit
-    
+        
     credit_limit_restriction = fields.Boolean("Credit Limit Restriction?")
     balance = fields.Float(
         compute='_get_balance',
