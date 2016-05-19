@@ -604,7 +604,7 @@ openerp.ta_pos_enhanced = function(instance){
                                                     	if(f_balance>client.credit_limit){
                                                             	self.pos_widget.screen_selector.show_popup('error',{
                                                             		'message': _t('Credit Limit'),
-                                                            		'comment': _t('Invoice total above credit limit.'),
+                                                            		'comment': _t('This customer will exceed credit limit by ₦'+ (f_balance-client.credit_limit) +' if invoice is validated'),
                                                         		});
                                                         		return;
                                                     		}
