@@ -66,7 +66,13 @@ openerp.ta_pos_enhanced = function(instance){
             })
             return loaded;
         },
-        
+        refresh_qty_available:function(product){
+            var $elem = $("[data-product-id='"+product.id+"'] .qty-tag");
+            $elem.html(product.qty_available)
+            if (product.qty_available <= 0 && !$elem.hasClass('not-available')){
+                $elem.addClass('not-available')
+            }
+        },
         push_order: function(order){
             var self = this;
             var pushed = PosModelSuper.prototype.push_order.call(this, order);
@@ -75,7 +81,13 @@ openerp.ta_pos_enhanced = function(instance){
             var currentScreen = ss.get_current_screen();
             var order = self.get('selectedOrder');
             var bal = order.getPaidTotal() - order.getTotalTaxIncluded();
-
+            if (order){
+                order.get('orderLines').each(function(line){
+                    var product = line.get_product();
+                    product.qty_available -= line.get_quantity();
+                    self.refresh_qty_available(product);
+                })
+            }
             if (client){
                 if(order.get_balance()){
                     //console.log(bal);
@@ -138,12 +150,17 @@ openerp.ta_pos_enhanced = function(instance){
                 var client = order && order.get_client();
             
                 if(order.get_balance()){
-                    //console.log(bal);
                     client.balance -= bal;
-                    return;
+                    //return;
                 }
-            
-                
+				
+	            if (order){
+	                order.get('orderLines').each(function(line){
+	                    var product = line.get_product();
+	                    product.qty_available -= line.get_quantity();
+	                    self.refresh_qty_available(product);
+	                })
+	            }
                 return done;
 
             });
@@ -604,7 +621,7 @@ openerp.ta_pos_enhanced = function(instance){
                                                     	if(f_balance>client.credit_limit){
                                                             	self.pos_widget.screen_selector.show_popup('error',{
                                                             		'message': _t('Credit Limit'),
-                                                            		'comment': _t('This customer will exceed credit limit by ₦'+ (f_balance-client.credit_limit) +' if invoice is validated'),
+                                                            		'comment': _t('This customer will exceed credit limit by ₦'+ (f_balance-client.credit_limit)+' if invoice is validated'),
                                                         		});
                                                         		return;
                                                     		}
