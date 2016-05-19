@@ -34,9 +34,8 @@ _logger = logging.getLogger(__name__)
             
             
 class account_invoice_tax(models.Model):
-    _inherit = "account.invoice.tax"
-            
-#tahir
+    _inherit = "account.invoice.tax"        
+    #tahir
     @api.v8
     def compute(self, invoice):
         tax_grouped = {}
@@ -240,6 +239,7 @@ class res_partner(models.Model):
     def _get_balance(self):
         for partner in self:
             partner.balance = self.credit - self.debit
+    
     credit_limit_restriction = fields.Boolean("Credit Limit Restriction?")
     balance = fields.Float(
         compute='_get_balance',
@@ -294,14 +294,8 @@ class pos_make_payment(osv.osv_memory):
 class point_of_sale(models.Model):
     _inherit = 'pos.order'
 
-
-
-    #ßmax_discount = fields.Float('Maximum Discount')
-
-
     def check_connection(self, cr, uid, context=None):
         return True
-    
     
     def get_default_warehouse(self, cr, uid, context=None):
         company_id = self.pool.get('res.users')._get_company(cr, uid, context=context)
@@ -322,8 +316,6 @@ class point_of_sale(models.Model):
             raise osv.except_osv(_('Error!'), _('There is no default company for the current user\'s company!'))
         return company_id
     
-    
-    
     def get_account_id(self, cr, uid, journal, partner_id, context=None):
         partner_pool = self.pool.get('res.partner')
         journal_pool = self.pool.get('account.journal')
@@ -339,7 +331,6 @@ class point_of_sale(models.Model):
                 raise osv.except_osv(_('Error!'), _('Please define default credit/debit accounts on the journal "%s".') % (journal.name))
             account_id = journal.default_credit_account_id.id or journal.default_debit_account_id.id
         return account_id
-    
     
     def _account_voucher_fields(self, cr, uid, payment_info, journal_id, amount, context=None):
         journal_pool = self.pool.get('account.journal')
@@ -403,7 +394,6 @@ class point_of_sale(models.Model):
     def create_from_ui(self, cr, uid, orders, context=None):
 
         #TODO if payment is 0, then no need to add payment
-
         # Keep only new orders
         submitted_references = [o['data']['name'] for o in orders]
         existing_order_ids = self.search(cr, uid, [('pos_reference', 'in', submitted_references)], context=context)
@@ -638,7 +628,6 @@ class point_of_sale(models.Model):
     
     def test_paid(self, cr, uid, ids, context=None):
         return True
-
 
     def _create_account_move_line(self, cr, uid, ids, session=None, move_id=None, context=None):
         # Tricky, via the workflow, we only have one id in the ids variable

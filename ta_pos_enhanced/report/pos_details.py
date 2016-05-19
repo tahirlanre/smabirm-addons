@@ -127,69 +127,11 @@ class pos_details_custom(pos_details):
 
 
     def _get_order_payment(self, pid):
-        """
-
-        :type self: object
-        """
         self.amount_paid = 0.0
-        statement_line_obj = self.pool.get("account.bank.statement.line")
         pos_order_obj = self.pool.get("pos.order")
-        #user_ids = form['user_ids'] or self._get_all_users()
-        #company_id = self.pool['res.users'].browse(self.cr, self.uid, self.uid).company_id.id
         pos_ids = pos_order_obj.search(self.cr, self.uid, [('name','=',pid['ref'])])
-        self._get_discount_payment(pid);
-        data={}
-        if pos_ids:
-            st_line_ids = statement_line_obj.search(self.cr, self.uid, [('pos_statement_id', 'in', pos_ids)])
-            if st_line_ids:
-                st_id = statement_line_obj.browse(self.cr, self.uid, st_line_ids)
-                a_l=[]
-                for r in st_id:
-                    a_l.append(r['id'])
-                self.cr.execute("select aj.name,sum(amount) from account_bank_statement_line as absl,account_bank_statement as abs,account_journal as aj " \
-                                "where absl.statement_id = abs.id and abs.journal_id = aj.id and aj.name != 'Discount Journal' and absl.id IN %s " \
-                                "group by aj.name ",(tuple(a_l),))
-
-                data = self.cr.dictfetchall()
-                for a in data:
-					self.amount_paid+=a['sum']
-                #for a in data:
-                    #self.total_paid_order+=a['sum']
-                    #self.total_paid+=a['sum']
-                return self.amount_paid or 0.0
-            else:
-                return self.amount_paid or 0.0
-
-        else:
-            return self.amount_paid or 0.0
-
-    def _get_order_discount(self, pid):
-        self.discount_amount = 0.0
-
-        statement_line_obj = self.pool.get("account.bank.statement.line")
-        pos_order_obj = self.pool.get("pos.order")
-        #user_ids = form['user_ids'] or self._get_all_users()
-        #company_id = self.pool['res.users'].browse(self.cr, self.uid, self.uid).company_id.id
-        pos_ids = pos_order_obj.search(self.cr, self.uid, [('name','=',pid['ref'])])
-        data={}
-        if pos_ids:
-            st_line_ids = statement_line_obj.search(self.cr, self.uid, [('pos_statement_id', 'in', pos_ids)])
-            if st_line_ids:
-                st_id = statement_line_obj.browse(self.cr, self.uid, st_line_ids)
-                a_l=[]
-                for r in st_id:
-                    a_l.append(r['id'])
-                self.cr.execute("select aj.name,sum(amount) from account_bank_statement_line as absl,account_bank_statement as abs,account_journal as aj " \
-                                "where absl.statement_id = abs.id and abs.journal_id = aj.id and aj.name = 'Discount Journal' and absl.id IN %s " \
-                                "group by aj.name ",(tuple(a_l),))
-
-                data = self.cr.dictfetchall()
-                for a in data:
-					self.discount_amount+=a['sum']
-                #self.discount_paid+=a['sum']
-                return self.discount_amount or 0.0
-        else:
-            return self.discount_amount or 0.0
+        order = pos_order_obj.browse(self.cr, self.uid, pos_ids)
+        return order.amount_paid or 0.0
 
     def _get_order_total(self):
         return self.order_total or 0.0
@@ -197,8 +139,6 @@ class pos_details_custom(pos_details):
     def _paid_total_2(self):
         return self.total_paid or 0.0
 
-    def _discount_total(self):
-        return self.discount_paid or 0.0
 
     def _get_payments(self, form):
         statement_line_obj = self.pool.get("account.bank.statement.line")
@@ -216,28 +156,12 @@ class pos_details_custom(pos_details):
                 a_l=[]
                 for r in st_id:
                     a_l.append(r['id'])
-                """self.cr.execute("select aj.name, aj.id, sum(amount) from account_bank_statement_line as absl,account_bank_statement as abs,account_journal as aj " \
-                                "where absl.statement_id = abs.id and abs.journal_id = aj.id  and aj.name != 'Discount Journal' and absl.id IN %s " \
-                                "group by aj.id ",(tuple(a_l),))"""
-
                 self.cr.execute("select a.id, a.name, sum(sum) from (select aj.id,aj.name, sum(amount) from account_bank_statement_line as absl,account_bank_statement as abs,account_journal as aj "\
                                 "where absl.statement_id = abs.id and abs.journal_id = aj.id  and aj.name != 'Discount Journal' and absl.date >= '%s' and absl.date <= '%s'"\
                                 "group by aj.id, aj.name union all select aj.id , aj.name, sum(amount) from pos_customer_payment as pos, account_journal as aj where payment_date >= '%s' and payment_date <= '%s' and aj.name != 'Discount Journal' and aj.id = pos.journal_id group by aj.id, aj.name) a group by a.id, a.name"%(form['date_start'],form['date_end'],form['date_start'],form['date_end']))
                 data = self.cr.dictfetchall()
-
-                #self.cr.execute("select pos.journal_id , sum(amount) from pos_customer_payment as pos where payment_date >= '%s' and payment_date <= '%s' group by pos.journal_id" %(form['date_start'], form['date_end']))
-
-                #data1 = self.cr.dictfetchall()
-
                 for a in data:
-                    #tmp = a['id']
-                    #for b in data1:
-                        #if tmp == b['journal_id']:
-                            #sum=b['sum']
-                            #a['sum']+=sum
-                            #self.total_paid+=a['sum']
                     self.total_paid+=a['sum']
-
                 return data
             else:
                 return {}
@@ -267,7 +191,6 @@ class pos_details_custom(pos_details):
         super(pos_details_custom, self).__init__(cr, uid, name, context=context)
         self.order_total = 0.0     #Tahir
         self.total_paid = 0.0
-        self.discount_paid = 0.0
         self.total_paid_order = 0.0
         self.discount = 0.0
         self.localcontext.update({
@@ -277,8 +200,6 @@ class pos_details_custom(pos_details):
             'getcreditsalestotal': self._get_credit_sales_total,
             'getordertotal': self._get_order_total,
             'getdiscountpayment': self._get_discount_payment,
-            'totaldiscount': self._discount_total,
-            'getdiscountamount': self._get_order_discount,
             'paymentinfo': self._pos_customer_payment,
             'getsumdisc': self._get_sum_discount,
             

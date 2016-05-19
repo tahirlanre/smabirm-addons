@@ -317,8 +317,8 @@
         </receipt>
     </t>
     
-    <t t-name="PosTicket">
-			<div class="pos-sale-ticket">
+    <t t-extend="PosTicket">
+        <t t-jquery=".pos-sale-ticket" t-operation="inner">
             <div id="company_logo" class="pos-center-align"><img t-att-src="'data:image/png;base64,'+widget.pos.company.logo"/>
             </div>
 			<br />
@@ -439,7 +439,7 @@
                     <t t-esc="widget.pos.config.receipt_footer" />
                 </div>
             </t>
-		</div>	
+		</t>	
     </t>
     
     <t t-extend="ClientDetails">

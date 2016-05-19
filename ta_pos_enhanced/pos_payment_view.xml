@@ -6,18 +6,15 @@
     <act_window id="action_pos_payment"
       name="Customer Payments"
       res_model="pos.customer.payment"
-      view_mode="tree" />
+      view_mode="tree"/>
 
     <!-- Menu item to open To-do Task list -->
-    <menuitem id="menu _pos_payment"
+    <menuitem id="menu_pos_payment"
       name="Customer Payments"
       parent="point_of_sale.menu_point_of_sale"
       sequence="20"
       action="action_pos_payment" />
 
-
-
-    
     <record id="view_tree_pos_payment" model="ir.ui.view">
         <field name="name">POS Payment Tree</field>
         <field name="model">pos.customer.payment</field>
@@ -31,8 +28,6 @@
         </tree>
         </field>
     </record>
-
-
     
     <record id="view_pos_config_form" model="ir.ui.view">
             <field name="name">pos.config.form.view</field>
@@ -58,9 +53,10 @@
 	    <field name="arch" type="xml">
             <field name="credit_limit" position="attributes">
                 <attribute name="attrs">{'invisible':[('credit_limit_restriction','=',False)]}</attribute>
+				<attribute name="groups">base.group_erp_manager</attribute>
             </field>
 	        <field name="credit_limit" position="before">
-	            <field name="credit_limit_restriction"/>
+	            <field name="credit_limit_restriction" groups="base.group_erp_manager"/>
 	        </field>
 	    </field>
 	</record>
