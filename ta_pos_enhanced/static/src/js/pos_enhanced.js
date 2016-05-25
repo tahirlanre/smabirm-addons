@@ -30,15 +30,7 @@ openerp.ta_pos_enhanced = function(instance){
                     console.warn('TODO should not get there...?');
                     return;
                 }
-              
-                /*if (!self.pos.get('selectedOrder').get_client()){
-                    setTimeout(function(){
-                        var ss = self.pos.pos_widget.screen_selector;
-                        ss.set_current_screen('clientlist');
-                    }, 30);
-                }*/
-                
-                
+                    
                 self.pos_widget.screen_selector.show_popup('customer-payment-popup');
                //self.pos_widget.screen_selector.set_current_screen('customer_payment');
             });
@@ -68,6 +60,7 @@ openerp.ta_pos_enhanced = function(instance){
         },
         refresh_qty_available:function(product){
             var $elem = $("[data-product-id='"+product.id+"'] .qty-tag");
+			console.log($elem);
             $elem.html(product.qty_available)
             if (product.qty_available <= 0 && !$elem.hasClass('not-available')){
                 $elem.addClass('not-available')
@@ -139,7 +132,7 @@ openerp.ta_pos_enhanced = function(instance){
                      //   active_ids:order_server_id,
                     //}});
                     //self.pos_widget.screen_selector.set_current_screen('receipt')
-                    console.log(order_server_id);
+                   // console.log(order_server_id);
                     order.invoice_no = order_server_id[0];
                     //console.log(order.get_invoice_no(order));
                     invoiced.resolve();
@@ -431,9 +424,6 @@ openerp.ta_pos_enhanced = function(instance){
             
             return this.payment_no;
         },
-        
-       
-    
         getChange: function() {
             var self = this;
             var ss = self.pos.pos_widget.screen_selector;
@@ -442,14 +432,12 @@ openerp.ta_pos_enhanced = function(instance){
                 return change;
             return 0;
         },
-        
         get_balance: function(){
 
             var balance = this.getPaidTotal() - this.getTotalTaxIncluded();
             if(balance < 0)
                 return balance;
             return 0;
-       
         },
         addProduct: function(product, options){
             
@@ -526,6 +514,16 @@ openerp.ta_pos_enhanced = function(instance){
     });
     
     module.PaymentScreenWidget.include({
+		partner_balance: function(client){
+			var model = new instance.web.Model("res.partner");
+			return model.query(['balance'])
+								.filter([['id','=',client.id]])
+								.first()
+								.then(function(result){ 
+									return result;
+								});
+			
+		},
         
         show: function(){
             this._super();
@@ -553,7 +551,7 @@ openerp.ta_pos_enhanced = function(instance){
                 this.pos_widget.action_bar.set_button_disabled('invoice', true);
             }
         },
-        
+       
         validate_order: function(options) {
             var self = this;
 
@@ -563,6 +561,8 @@ openerp.ta_pos_enhanced = function(instance){
             var currentOrderLines = this.pos.get('selectedOrder').get('orderLines');
             var item_count = 0;
 			var client = currentOrder.get_client();
+			
+			
             if (currentOrderLines.length > 0) {
                 new instance.web.Model("pos.order").get_func("check_connection")().done(function(connection) {
                     if (connection) {
@@ -610,14 +610,22 @@ openerp.ta_pos_enhanced = function(instance){
                                                     }
                                                 }
 												//debugger;
-												if(client){
+												if(client && currentOrder.get_balance()){
 													if(client.credit_limit_restriction){
 														var total_pay = 0;
+														var yo = 0;
 														for (var i = 0; i < plines.length; i++) {
                                                     		total_pay = plines[i].get_amount(); 
                                                     	}
+														/*console.log(self.partner_balance(client));
+														var pb = self.partner_balance(client);
+														pb.done(function(customer){
+															console.log('Printing balance from server call '+result.balance)
+															yo = result.balance;
+															console.log('Printing yo inside'+ yo);
+														});*/
 														var f_balance = client.balance + (currentOrder.getTotalTaxIncluded()-total_pay);
-														console.log(f_balance);
+														//console.log('Printing yo '+ yo);
                                                     	if(f_balance>client.credit_limit){
                                                             	self.pos_widget.screen_selector.show_popup('error',{
                                                             		'message': _t('Credit Limit'),
@@ -696,8 +704,6 @@ openerp.ta_pos_enhanced = function(instance){
                                                         }else{
                                                             alert("Could not process invoice, please refresh and start again");
                                                         }
-                                                        //self.pos_widget.screen_selector.set_current_screen(self.next_screen);
-                                                        //self.pos.get('selectedOrder').destroy();
                                                     });
                                     
                                                 }else{

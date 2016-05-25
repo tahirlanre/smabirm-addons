@@ -233,18 +233,19 @@ class point_of_sale(models.Model):
 
 class res_partner(models.Model):
     _inherit = 'res.partner'
-
+    
     @api.one
     @api.depends('debit', 'credit')
     def _get_balance(self):
         for partner in self:
             partner.balance = self.credit - self.debit
-        
+   
     credit_limit_restriction = fields.Boolean("Credit Limit Restriction?")
     balance = fields.Float(
         compute='_get_balance',
         string='Balance', readonly=True,
         digits=dp.get_precision('Account'))
+  
         
 
 class pos_make_payment(osv.osv_memory):

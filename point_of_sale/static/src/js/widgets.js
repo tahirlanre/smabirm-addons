@@ -53,7 +53,6 @@ function openerp_pos_widgets(instance, module){ //module is instance.point_of_sa
             window.numpadstate = this.state;
             //widget = this;
             var self = this;
-            var test = 'tahir';
         },
        
         start: function() {
