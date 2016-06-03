@@ -417,7 +417,7 @@ class point_of_sale(models.Model):
                 return []
 
             order_obj = self.browse(cr, uid, order_id, context)
-
+            
             #Tahir
             try:
                 self._create_account_move_line(cr, uid, order_id)
@@ -430,7 +430,7 @@ class point_of_sale(models.Model):
                         }
                     self.pool.get('account.bank.statement.line').process_reconciliation(cr, uid, st_line.id, [vals], context=context)
             except Exception as e:
-                _logger.error('Smabirm Error: %s', tools.ustr(e))
+                _logger.error('Could not process payment for order: %s', tools.ustr(e))
                 return []
 
             if to_invoice:
@@ -527,7 +527,8 @@ class point_of_sale(models.Model):
                 
                 return pos_p.id
             except Exception as e:
-                _logger.error('which kind wahala sef 2: %s', tools.ustr(e))
+                _logger.error('Error processing customer payment: %s', tools.ustr(e))
+                return
         else:
             return    
     
