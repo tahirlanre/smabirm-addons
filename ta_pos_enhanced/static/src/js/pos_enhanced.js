@@ -60,7 +60,6 @@ openerp.ta_pos_enhanced = function(instance){
         },
         refresh_qty_available:function(product){
             var $elem = $("[data-product-id='"+product.id+"'] .qty-tag");
-			console.log($elem);
             $elem.html(product.qty_available)
             if (product.qty_available <= 0 && !$elem.hasClass('not-available')){
                 $elem.addClass('not-available')
@@ -74,6 +73,7 @@ openerp.ta_pos_enhanced = function(instance){
             var currentScreen = ss.get_current_screen();
             var order = self.get('selectedOrder');
             var bal = order.getPaidTotal() - order.getTotalTaxIncluded();
+			//console.log('push_order', order.export_as_JSON());
             if (order){
                 order.get('orderLines').each(function(line){
                     var product = line.get_product();
@@ -104,7 +104,7 @@ openerp.ta_pos_enhanced = function(instance){
                 invoiced.reject('error-no-client');
                 return invoiced;
             }
-
+			//console.log('push_and_invoice_order', order.export_as_JSON());
             var order_id = this.db.add_order(order.export_as_JSON());
            
             this.flush_mutex.exec(function(){
@@ -754,16 +754,17 @@ openerp.ta_pos_enhanced = function(instance){
         
         init: function(parent, options){
             this._super(parent, options);
-            this.cashregisters = this.pos.cashregisters;
+			this.cashregisters = this.pos.cashregisters;
         },
         
         show: function () {
             var self = this;
             this._super();
             this.renderElement();
+			//console.log('cash', this.cashregisters);
             this.$('.footer #accept').off('click').click(function () {
                 if (confirm("Are you sure you want to pay this?") == true) {
-                    self.payment_via_pos();
+                    self.customer_payment_via_pos();
                 }else{
                     
                 }
@@ -779,24 +780,66 @@ openerp.ta_pos_enhanced = function(instance){
             var fields = {}
             var contents = this.$('.payment-details');
             contents.empty();
+			//console.log('pos', this.cashregisters);
             contents.append($(QWeb.render('PaymentDetailsWidget',{widget:this})));
             contents.find('.layby-payment input').on('keyup',function(event){
-                
                     self.pos.get('selectedOrder').set_payment_amount(this.value);
-                    
-                    console.log('value', this.value);
+                    //console.log('value', this.value);
                     //self.update_payment_summary(layby, contents);
                 });
              
             //contents.empty();
             
         },
-        
-        payment_via_pos: function(){
-            var self = this;
+		customer_payment_via_pos: function(){
+			var self = this;
             var currentOrder = this.pos.get('selectedOrder');
             var client = currentOrder.get_client();
             var fields = {}
+            this.$('.payment-details .detail').each(function(idx,el){
+                fields[el.name] = el.value;
+                });
+			this.pos.get('selectedOrder').set_payment_detail(fields.cash_id);
+			var journal_id = parseInt(fields.cash_id);
+			var amount = this.$('.layby-payment input').val();
+			var statement_id;
+			var pos_session_id = this.pos.pos_session.id;
+			for(var i = 0; i < this.cashregisters.length; i++){
+				if (this.cashregisters[i].journal_id[0] == fields.cash_id){
+					statement_id = this.cashregisters[i].id;
+					//console.log('statement_id', statement_id);
+					break;
+				}
+			}
+			if(client){
+                partner_id = client.id;
+                if(amount){
+                new instance.web.Model('pos.order').call('pos_customer_payment',[amount, statement_id, journal_id, partner_id, pos_session_id]).then(function(result){
+                   if(result){
+                       //self.pos.get('selectedOrder').destroy();
+                    currentOrder.payment_no = result;
+                    client.balance -=amount;
+                    //self.pos.load_new_invoices();
+                    self.pos_widget.screen_selector.close_popup();
+                    self.pos_widget.screen_selector.set_current_screen('customer_receipt');
+                   }
+                });}else{
+                    alert('Please enter valid amount!');
+                    //self.pos_widget.screen_selector.close_popup();
+                } 
+			}else{
+                alert('Please choose Customer !');
+                self.pos_widget.screen_selector.close_popup();
+			}
+		},
+        
+        payment_via_pos: function(){
+			var self = this;
+            var currentOrder = this.pos.get('selectedOrder');
+            var client = currentOrder.get_client();
+            var fields = {}
+			var statement_id;
+			var pos_session_id = this.pos.pos_session.id;
             this.$('.payment-details .detail').each(function(idx,el){
                 //console.log('1 ' + el.name);
                 //console.log('2 ' + el.value);
@@ -805,27 +848,20 @@ openerp.ta_pos_enhanced = function(instance){
                 });
             fields.cash_id = fields.cash_id;
             this.pos.get('selectedOrder').set_payment_detail(fields.cash_id);
+			//console.log('pos ', this.pos);
             var amount = this.pos.get('selectedOrder').get_payment_amount();
-            
-            
             if(client) {
-                
                 partner = client.id;
-                
                 if(amount){
                 new instance.web.Model('pos.order').call('customer_payment_via_pos',[partner, fields.cash_id, amount]).then(function(result){
-                  
                    if(result){
                        //self.pos.get('selectedOrder').destroy();
                     currentOrder.payment_no = result;
-                    console.log(result);
                     client.balance -=amount;
                     //self.pos.load_new_invoices();
                     self.pos_widget.screen_selector.close_popup();
                     self.pos_widget.screen_selector.set_current_screen('customer_receipt');
-                       
                    }
-                   
                 });}else{
                     alert('Please enter valid amount!');
                     //self.pos_widget.screen_selector.close_popup();
