@@ -494,7 +494,6 @@ function openerp_pos_models(instance, module){ //module is instance.point_of_sal
                 this.proxy.log('push_order',order.export_as_JSON());
                 this.db.add_order(order.export_as_JSON());
             }
-            
             var pushed = new $.Deferred();
 
             this.flush_mutex.exec(function(){
@@ -523,7 +522,6 @@ function openerp_pos_models(instance, module){ //module is instance.point_of_sal
                 invoiced.reject('error-no-client');
                 return invoiced;
             }
-
             var order_id = this.db.add_order(order.export_as_JSON());
 
             this.flush_mutex.exec(function(){
