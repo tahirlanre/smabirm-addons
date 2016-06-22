@@ -20,7 +20,7 @@
 ##############################################################################
 
 {
-    'name': 'Enhanced POS',
+    'name': 'Enhanced POS for Smabirm',
     'version': '1.0.0',
     'category': 'Point Of Sale',
     'sequence': 6,
