@@ -180,13 +180,12 @@ class pos_customer_payment(models.Model):
     
     #def create(self, test, context = context)
     
-    journal_id = fields.Many2one('account.journal', 'Payment Mode')
+    journal_id = fields.Many2one('account.journal', 'Payment Method')
     amount = fields.Float('Amount')
     payment_name = fields.Char('Payment Reference')
     payment_date = fields.Date('Payment Date')
     partner_id = fields.Many2one('res.partner', 'Customer')
     
-
     
 class pos_config(models.Model):
     _inherit = 'pos.config'
@@ -473,8 +472,8 @@ class point_of_sale(models.Model):
     
     
     #Tahir
-    #TODO - Refactor Code
-    def pos_customer_payment(self, cr, uid, amount, statement_id, journal_id, partner_id, session_id, context=None):
+    #TODO - Refactor Code, add sufficient comments
+    def pos_customer_payment(self, cr, uid, amount, statement_id, journal_id, partner_id, session_id, ref, context=None):
         """Create a new payment for the order"""
         context = dict(context or {})
         statement_line_obj = self.pool.get('account.bank.statement.line')
@@ -488,7 +487,7 @@ class point_of_sale(models.Model):
         args = {
             'amount': amount,
             'date': time.strftime('%Y-%m-%d'),
-            'name': 'Payment',
+            'name': ref,
             'partner_id': partner_id and self.pool.get("res.partner")._find_accounting_partner(partner).id or False,
         }
 
@@ -547,7 +546,7 @@ class point_of_sale(models.Model):
             pos_customer_payment= {
                 'amount': amount,
                 'journal_id' : journal_id,
-                'payment_name' : 'Customer Payment',
+                'payment_name' : ref,
                 'payment_date': time.strftime('%Y-%m-%d'),
                 'partner_id': partner_id and self.pool.get("res.partner")._find_accounting_partner(partner).id or False,
             }

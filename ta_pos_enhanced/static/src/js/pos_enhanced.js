@@ -802,21 +802,20 @@ openerp.ta_pos_enhanced = function(instance){
 			this.pos.get('selectedOrder').set_payment_detail(fields.cash_id);
 			var journal_id = parseInt(fields.cash_id);
 			var amount = this.$('.layby-payment input').val();
+			var ref = this.$('.layby-payment-desc input').val();
 			var statement_id;
 			var pos_session_id = this.pos.pos_session.id;
 			for(var i = 0; i < this.cashregisters.length; i++){
 				if (this.cashregisters[i].journal_id[0] == fields.cash_id){
 					statement_id = this.cashregisters[i].id;
-					//console.log('statement_id', statement_id);
 					break;
 				}
 			}
 			if(client){
                 partner_id = client.id;
                 if(amount){
-                new instance.web.Model('pos.order').call('pos_customer_payment',[amount, statement_id, journal_id, partner_id, pos_session_id]).then(function(result){
+                new instance.web.Model('pos.order').call('pos_customer_payment',[amount, statement_id, journal_id, partner_id, pos_session_id, ref]).then(function(result){
                    if(result){
-                       //self.pos.get('selectedOrder').destroy();
                     currentOrder.payment_no = result;
                     client.balance -=amount;
                     //self.pos.load_new_invoices();

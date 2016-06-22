@@ -13,13 +13,13 @@
         </t>
     </t>
     <t t-name="PaymentDetailsWidget">
-        <p class="message">Customer Payment</p>
+				<div class="header">Customer Payment</div>
                 <div>
-                <span class='label' style="font-weight:normal">Paid Amount </span>
-                <span class='layby-payment'><input  placeholder='₦'/></span>
+                	<span class='label' style="font-weight:normal">Paid Amount </span>
+                	<span class='layby-payment'><input  placeholder='₦'/></span>
                 </div>
-                <br />
                 <div>
+				<br/>
                 <span class='label' style="font-weight:normal">Payment Method </span>
                         <select class="detail payment-method-select" name='cash_id' >
                             <t t-foreach="widget.cashregisters" t-as="cash">
@@ -29,6 +29,11 @@
                             </t>
                         </select>
                 </div>
+				<br/>
+				<div>
+					<span class='label' style="font-weight:normal">Payment Reference</span>
+					<span class='layby-payment-desc'><input  placeholder='Optional'/></span>
+				</div>
     </t>
 	<t t-name="CustomerPaymentWidget">
         <div class="modal-dialog">
@@ -37,7 +42,6 @@
                 
                 </div>
                 <div class="footer">
-            
                     <div class="button" id="accept">
                         Validate
                     </div>
@@ -49,7 +53,6 @@
             </div>
         </div>
     </t>
-	
 	<t t-name="CustomerPaymentScreenWidget">
 	        <div class="payment-screen screen touch-scrollable">
 	            <div class="pos-payment-container">
@@ -81,8 +84,6 @@
 	            </div>
 	        </div>
 	</t>
-
-
     <t t-name="CustomerReceiptScreenWidget">
         <div class="receipt-screen screen touch-scrollable" >
             <div class="pos-step-container">
@@ -91,10 +92,7 @@
             </div>
         </div>
     </t>
-    
-    
-    
-    <t t-name="CustomerPosTicket">
+    <!--<t t-name="CustomerPosTicket">
         <div class="pos-sale-ticket">
 
             <div id="company_logo" class="pos-center-align"><img t-att-src="'data:image/png;base64,'+widget.pos.company.logo"/>
@@ -124,18 +122,8 @@
 				
 				<hr />
 				
-			    
 				<table>
-					<!--<tr t-foreach="paymentlines" t-as="line">
-						<t t-if="line.amount >= 0">
-							<td>
-								<t t-esc="line.name"/>
-							</td>
-							<td class="pos-right-align">
-								<t t-esc="widget.format_currency(line.get_amount())"/>
-							</td>
-						</t>
-					</tr>!-->
+				
                     
                     <td>
                         <t t-esc="paymentdetail"/>
@@ -144,16 +132,7 @@
                         <t t-esc="widget.format_currency(paymentamount)"/>
                     </td>
 				</table>
-                <br />
-                <!--<table>
-                    <td>
-                        Customer Balance: 
-                    </td>
-                     <td class="pos-right-align">
-                       <t t-esc="widget.format_currency(partner.balance)"/>
-                    </td>
-                </table>!-->
-				
+                <br />	
 				<hr />
 				
             
@@ -165,9 +144,7 @@
                 </div>
             </t>
         </div>
-    </t>
-
-
+    </t>-->
     <t t-name="CustomerXmlReceipt">
         <receipt align='center' width='40' value-thousands-separator='' >
             <t t-if='receipt.company.logo'>
@@ -315,9 +292,8 @@
             </div>
 
         </receipt>
-    </t>
-    
-    <t t-extend="PosTicket">
+    </t> 
+    <!--<t t-extend="PosTicket">
         <t t-jquery=".pos-sale-ticket" t-operation="inner">
             <div id="company_logo" class="pos-center-align"><img t-att-src="'data:image/png;base64,'+widget.pos.company.logo"/>
             </div>
@@ -440,8 +416,7 @@
                 </div>
             </t>
 		</t>	
-    </t>
-    
+    </t>-->
     <t t-extend="ClientDetails">
         <t t-jquery=".client-details-right" t-operation="append">
             <div class="client-detail">
@@ -460,7 +435,6 @@
             <t t-esc="(widget.order.get_client() ? '[Bal: ' + (Math.round(widget.order.get_client().balance * 100) / 100).toString() + ']': '')"/>
         </t>
     </t>
-    
     <t t-name="Orderline">
         <li t-attf-class="orderline #{ line.selected ? 'selected' : '' }">
             <span class="product-name">
