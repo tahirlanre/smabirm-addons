@@ -1,12 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="ChangeListManager">
-    <list default="true" id="63a6db7e-3476-49c4-a298-24ffb9796b9f" name="Default" comment="">
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/point_of_sale/static/src/js/models.js" afterPath="$PROJECT_DIR$/point_of_sale/static/src/js/models.js" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/point_of_sale/point_of_sale.py" afterPath="$PROJECT_DIR$/point_of_sale/point_of_sale.py" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/ta_pos_enhanced/static/src/js/pos_enhanced.js" afterPath="$PROJECT_DIR$/ta_pos_enhanced/static/src/js/pos_enhanced.js" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/ta_pos_enhanced/pos_enhanced.py" afterPath="$PROJECT_DIR$/ta_pos_enhanced/pos_enhanced.py" />
-    </list>
+    <list default="true" id="63a6db7e-3476-49c4-a298-24ffb9796b9f" name="Default" comment="" />
     <ignored path="addons-smabirm.iws" />
     <ignored path=".idea/workspace.xml" />
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
@@ -315,7 +310,7 @@
   </component>
   <component name="ToolWindowManager">
     <frame x="4" y="23" width="1260" height="711" extended-state="0" />
-    <editor active="true" />
+    <editor active="false" />
     <layout>
       <window_info id="Terminal" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
       <window_info id="TODO" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="6" side_tool="false" content_ui="tabs" />
