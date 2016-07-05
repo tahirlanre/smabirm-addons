@@ -20,12 +20,37 @@
         <field name="model">pos.customer.payment</field>
         <field name="arch" type="xml">
         <tree create = "false">
+			<field name="id" readonly="1"/>
             <field name="payment_date" readonly="1"/>
             <field name="partner_id" readonly="1"/>
             <field name="journal_id" readonly="1"/>
             <field name="amount" readonly="1"/>
 			<field name="payment_name" readonly="1"/>
         </tree>
+        </field>
+    </record>
+	
+    <record model="ir.ui.view" id="view_pos_payment_search">
+        <field name="name">pos.customer.payment.search.view</field>
+        <field name="model">pos.customer.payment</field>
+        <field name="arch" type="xml">
+            <search string="POS Customer Payment">
+                <field name="id" />
+				<field name="partner_id" />
+				<field name="journal_id" />
+            </search>
+        </field>
+    </record>
+	
+    <record model="ir.ui.view" id="view_pos_order_search">
+        <field name="name">pos.order.search.view</field>
+        <field name="model">pos.order</field>
+		<field name="inherit_id" ref="point_of_sale.view_pos_order_filter"/>
+        <field name="arch" type="xml">
+			<xpath expr="//search[@string='Search Sales Order']" position="inside">
+				<field name="id" />
+				<field name="partner_id"/>
+			</xpath>
         </field>
     </record>
     
