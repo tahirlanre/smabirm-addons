@@ -26,7 +26,6 @@
     'sequence': 6,
     'summary': '',
     'description': """
-        - Custom receipt
         - Silent receipt printing
         - POS credit sales
         - Immediate POS sales posting
