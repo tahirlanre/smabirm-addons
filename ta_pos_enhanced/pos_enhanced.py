@@ -179,13 +179,12 @@ class pos_customer_payment(models.Model):
         return True
     
     #def create(self, test, context = context)
-    
+    pos_payment_statement_id = fields.Many2one('account.bank.statement.line', 'Statement Line')
     journal_id = fields.Many2one('account.journal', 'Payment Method')
     amount = fields.Float('Amount')
     payment_name = fields.Char('Payment Reference')
     payment_date = fields.Date('Payment Date')
     partner_id = fields.Many2one('res.partner', 'Customer')
-    
     
 class pos_config(models.Model):
     _inherit = 'pos.config'
@@ -193,8 +192,7 @@ class pos_config(models.Model):
     default_user = fields.Many2one('res.users', string = 'Default User')
     max_discount = fields.Float('Maximum Discount')
     discount_restriction = fields.Boolean('Discount Restriction')
-
-
+    
 class pos_session(osv.osv):
     _inherit = 'pos.session'
     
@@ -497,8 +495,8 @@ class point_of_sale(models.Model):
 
         journal = self.pool.get('account.journal').browse(cr, uid, journal_id, context=context)
         #print journal.company_id
-        print context
-        # use the company of the journal and not of the current user
+        #print context
+        #use the company of the journal and not of the current user
         company_cxt = dict(context, force_company=journal.company_id.id)
         account_def = property_obj.get(cr, uid, 'property_account_receivable', 'res.partner', context=company_cxt)
         args['account_id'] = (partner and partner.property_account_receivable \
@@ -533,7 +531,6 @@ class point_of_sale(models.Model):
         try:
             st_line_id = statement_line_obj.create(cr, uid, args, context=context)
             st_line = statement_line_obj.browse(cr, uid, st_line_id, context=context)
-        
             #for st_line in statement_line_obj.ids:
             vals = {
                     'debit': st_line.amount < 0 and -st_line.amount or 0.0,
@@ -542,21 +539,20 @@ class point_of_sale(models.Model):
                     'name': st_line.name
                 }
             self.pool.get('account.bank.statement.line').process_reconciliation(cr, uid, st_line.id, [vals], context=context)
-        
             pos_customer_payment= {
                 'amount': amount,
                 'journal_id' : journal_id,
                 'payment_name' : ref,
                 'payment_date': time.strftime('%Y-%m-%d'),
-                'partner_id': partner_id and self.pool.get("res.partner")._find_accounting_partner(partner).id or False,
+                'partner_id': partner_id and self.pool.get("res.partner")._find_accounting_partner(partner).id or False, 
+                'pos_payment_statement_id': st_line.id,   
             }
             payment = pos_customer_payment_obj.create(cr, uid, pos_customer_payment, context = context)
             pos_p = pos_customer_payment_obj.browse(cr, uid, payment, context=context)
         except Exception as e:
             _logger.error('Could not process customer payment: %s', tools.ustr(e))
             return 
-                
-        
+               
         return pos_p.id
 
         #return statement_id
@@ -620,75 +616,6 @@ class point_of_sale(models.Model):
                 return
         else:
             return    
-    
-    
-    def customer_payment_return(self, cr, uid, partner_id, journal_id, amount, context=None):
-        if context is None:
-            ctx = {}
-        journal_pool = self.pool.get('account.journal')
-        voucher_obj = self.pool.get('account.voucher')
-        voucher_line_obj = self.pool.get('account.voucher.line')
-        journal = journal_pool.browse(cr, uid, int(journal_id), context=context)
-        pos_payment = self.pool.get('pos.customer.payment')
-        
-        #inv = self.pool.get('account.invoice').browse(cr, uid, payment_info['id'], context=context)
-        res_partner = self.pool.get('res.partner').browse(cr,uid,partner_id,context=context)
-        
-        try:
-            ctx= {
-                    #'payment_expected_currency': inv.currency_id.id,
-                    'default_partner_id': self.pool.get('res.partner')._find_accounting_partner(res_partner).id,
-                    'default_amount': amount,
-                    #'default_reference': inv.name,
-                    #'close_after_process': True,
-                    #'invoice_type': inv.type,
-                    #'invoice_id': inv.id,
-                    #'default_type': 'receipt',
-                    'type': 'receipt',
-                }
-        except Exception as e:
-                _logger.error('Wahala dey small: %s', tools.ustr(e)) 
-                
-        
-        if amount != 0:
-            try:
-                vals = self._account_voucher_fields_1(cr, uid, partner_id, journal_id, amount, context=ctx)
-                del vals['value']['line_cr_ids']
-                del vals['value']['line_dr_ids']
-            except Exception as e:
-                _logger.error('which kind wahala sef 1: %s', tools.ustr(e))
-            
-            try:
-                voucher_id = voucher_obj.create(cr, uid, vals['value'], context=ctx)
-                res = self._account_voucher_fields_1(cr, uid, partner_id, journal_id, amount, context=context)
-                print res
-                if res['value']['line_cr_ids']:
-                    for line in res['value']['line_cr_ids']:
-                        line['voucher_id'] = voucher_id
-                        voucher_line_obj.create(cr, uid, line, context=ctx)
-                if res['value']['line_dr_ids']:
-                    for line in res['value']['line_dr_ids']:
-                        line['voucher_id'] = voucher_id
-                        voucher_line_obj.create(cr, uid, line, context=ctx)
-
-                voucher_obj.signal_workflow(cr, uid, [voucher_id], 'proforma_voucher')
-                
-                test= {
-                        'amount': amount,
-                        'journal_id' : journal_id,
-                        #'payment_name' : 'CP: ',
-                        'payment_date': time.strftime('%Y-%m-%d'),
-                        'partner_id': self.pool.get('res.partner')._find_accounting_partner(res_partner).id,
-                    }
-                   
-                payment = pos_payment.create(cr, uid, test, context = context)
-
-                return True
-            except Exception as e:
-                _logger.error('which kind wahala sef 2: %s', tools.ustr(e))
-        else:
-            return False
-    
     
     def _account_voucher_fields_1(self, cr, uid, customer_id, journal_id, amount, context=None):
         try:
