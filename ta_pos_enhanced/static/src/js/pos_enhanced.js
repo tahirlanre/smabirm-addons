@@ -524,13 +524,11 @@ openerp.ta_pos_enhanced = function(instance){
 								});
 			
 		},
-        
         show: function(){
             this._super();
             var self = this;
 
         },
-     
         update_payment_summary: function() {
             var currentOrder = this.pos.get('selectedOrder');
             var paidTotal = currentOrder.getPaidTotal();
@@ -551,7 +549,6 @@ openerp.ta_pos_enhanced = function(instance){
                 this.pos_widget.action_bar.set_button_disabled('invoice', true);
             }
         },
-       
         validate_order: function(options) {
             var self = this;
 
@@ -756,7 +753,6 @@ openerp.ta_pos_enhanced = function(instance){
             this._super(parent, options);
 			this.cashregisters = this.pos.cashregisters;
         },
-        
         show: function () {
             var self = this;
             this._super();
@@ -786,10 +782,8 @@ openerp.ta_pos_enhanced = function(instance){
                     self.pos.get('selectedOrder').set_payment_amount(this.value);
                     //console.log('value', this.value);
                     //self.update_payment_summary(layby, contents);
-                });
-             
-            //contents.empty();
-            
+                });           
+            //contents.empty();  
         },
 		customer_payment_via_pos: function(){
 			var self = this;
@@ -814,16 +808,18 @@ openerp.ta_pos_enhanced = function(instance){
 			if(client){
                 partner_id = client.id;
                 if(amount){
-                new instance.web.Model('pos.order').call('pos_customer_payment',[amount, statement_id, journal_id, partner_id, pos_session_id, ref]).then(function(result){
+                   new instance.web.Model('pos.order').call('pos_customer_payment',[amount, statement_id, journal_id, partner_id, pos_session_id, ref]).then(function(result){
                    if(result){
-                    currentOrder.payment_no = result;
-                    client.balance -=amount;
-                    //self.pos.load_new_invoices();
-                    self.pos_widget.screen_selector.close_popup();
-                    self.pos_widget.screen_selector.set_current_screen('customer_receipt');
+                   		currentOrder.payment_no = result;
+                   	 	client.balance -=amount;
+                   	 	//self.pos.load_new_invoices();
+                   	 	self.pos_widget.screen_selector.close_popup();
+                   	 	self.pos_widget.screen_selector.set_current_screen('customer_receipt');
+                   }else{
+                   		alert('Could not process payment! Please refresh and try again');
                    }
                 });}else{
-                    alert('Please enter valid amount!');
+                    	alert('Please enter valid amount!');
                     //self.pos_widget.screen_selector.close_popup();
                 } 
 			}else{
@@ -831,7 +827,6 @@ openerp.ta_pos_enhanced = function(instance){
                 self.pos_widget.screen_selector.close_popup();
 			}
 		},
-        
         payment_via_pos: function(){
 			var self = this;
             var currentOrder = this.pos.get('selectedOrder');
