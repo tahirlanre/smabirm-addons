@@ -192,6 +192,9 @@ class pos_config(models.Model):
     default_user = fields.Many2one('res.users', string = 'Default User')
     max_discount = fields.Float('Maximum Discount')
     discount_restriction = fields.Boolean('Discount Restriction')
+    silent_printing = fields.Boolean(default= True, string='Silent Printing')
+    no_of_sale_tickets = fields.Integer(default = 3, string = 'Number of sales tickets to print')
+    no_of_payment_tickets = fields.Integer(default = 2, string = 'Number of payment tickets to print')
     
 class pos_session(osv.osv):
     _inherit = 'pos.session'
