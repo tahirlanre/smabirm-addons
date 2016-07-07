@@ -203,29 +203,7 @@ openerp.ta_pos_enhanced = function(instance){
         
         
     });
-    
-    module.ReceiptScreenWidget.include({
-        
-        refresh: function() {
-            var order = this.pos.get('selectedOrder');
-			var customer = order.get_client();
-            var invoice_no = order.get_invoice_no();
-			var partner = '';
-			if(customer){
-				partner = customer;
-			}
-            $('.pos-receipt-container', this.$el).html(QWeb.render('PosTicket',{
-                    widget:this,
-                    order: order,
-					partner : partner,
-                    invoice : invoice_no,
-                    orderlines: order.get('orderLines').models,
-                    paymentlines: order.get('paymentLines').models,
-                }));
-        },
-    });
-    
-
+  
     module.CustomerReceiptScreenWidget = module.ScreenWidget.extend({
         template: 'CustomerReceiptScreenWidget',
 

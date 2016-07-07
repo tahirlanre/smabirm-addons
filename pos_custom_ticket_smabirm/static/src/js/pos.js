@@ -1,6 +1,6 @@
 openerp.pos_custom_ticket_smabirm = function(instance){
     var module = instance.point_of_sale;
-    //var QWeb = instance.web.qweb;
+    var QWeb = instance.web.qweb;
     //var _t = instance.web._t;
     var PosModelSuper = module.PosModel;
     //var round_di = instance.web.round_decimals;
@@ -25,6 +25,28 @@ openerp.pos_custom_ticket_smabirm = function(instance){
             return loaded;
         },
 	});
+	
+	
+    module.ReceiptScreenWidget.include({
+        
+        refresh: function() {
+            var order = this.pos.get('selectedOrder');
+			var customer = order.get_client();
+            var invoice_no = order.get_invoice_no();
+			var partner = '';
+			if(customer){
+				partner = customer;
+			}
+            $('.pos-receipt-container', this.$el).html(QWeb.render('PosTicket',{
+                    widget:this,
+                    order: order,
+					partner : partner,
+                    invoice : invoice_no,
+                    orderlines: order.get('orderLines').models,
+                    paymentlines: order.get('paymentLines').models,
+                }));
+        },
+    });
 	
 	
 }
