@@ -40,8 +40,8 @@
     
     'installable': True,
     
-    'data': ['pos_payment_view.xml',
-    'customer_payment.xml',
+    'data': ['views.xml',
+    'template.xml',
     'view/report_detailsofsales.xml',
     'wizard/debtors_report.xml',
     'view/report_debtorsreport.xml'],
