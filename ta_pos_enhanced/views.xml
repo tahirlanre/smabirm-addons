@@ -68,6 +68,11 @@
                         <field name="max_discount"  attrs="{'invisible':[('discount_restriction','=',False)]}"/>
                     </group>
                 </xpath>
+                <xpath expr="//group[@string='Receipt']" position="inside">
+                    <field name="silent_printing" />
+                    <field name="no_of_sale_tickets"  attrs="{'invisible':[('silent_printing','=',False)]}"/>
+					<field name="no_of_payment_tickets"  attrs="{'invisible':[('silent_printing','=',False)]}"/>
+                </xpath>
             </field>
     </record>
 	

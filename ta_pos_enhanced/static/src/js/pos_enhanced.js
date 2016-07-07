@@ -227,8 +227,8 @@ openerp.ta_pos_enhanced = function(instance){
                 });
 
             this.refresh();
-            var numOfTickets = 2; //No of tickets to print
-            this.print_ticket(numOfTickets);
+            var no_of_tickets = this.pos.config.no_of_payment_tickets; //No of tickets to print
+            this.print_ticket(no_of_tickets);
             //this.print();
 
             //
@@ -257,10 +257,9 @@ openerp.ta_pos_enhanced = function(instance){
             window.print();
         },
         print_ticket: function(no){ 
-            
-            // Catch error in case addon is not present - Tahir
-            try{
-                    
+			if(this.pos.config.silent_printing){
+            	// Catch error in case addon is not present - Tahir
+            	try{
                     //Always use default printer.
                     var listOfPrinters = jsPrintSetup.getPrintersList();
                     var default_printer = listOfPrinters.substr(0,listOfPrinters.indexOf(','));
@@ -279,46 +278,151 @@ openerp.ta_pos_enhanced = function(instance){
                     this.pos.get('selectedOrder')._printed = true;
                     jsPrintSetup.clearSilentPrint();
              
-            }catch(err){
-                
+            	}catch(err){
+                	//Use normal window printing
+                	this.pos.get('selectedOrder')._printed = true;
+                	setTimeout(function() {
+                        window.print();
+                    }, 1000);
+            	}
+			}else{
                 //Use normal window printing
                 this.pos.get('selectedOrder')._printed = true;
                 setTimeout(function() {
                         window.print();
                     }, 1000);
-                //window.print();
-            }   
+			}
         },
         finishOrder: function() {
             this.pos.get('selectedOrder').destroy();
         },
-        
-        refresh: function() {
-            var order = this.pos.get('selectedOrder');
-			var customer = order.get_client();
-			var partner = '';
-            var payment_detail = order.get_payment_detail();
-            var payment_amount = order.get_payment_amount();
-            var payment_no = order.get_payment_no();
-			if(customer){
-				partner = customer;
-			}
-            $('.pos-receipt-container', this.$el).html(QWeb.render('CustomerPosTicket',{
-                    widget:this,
-                    order: order,
-					partner : partner,
-                    orderlines: order.get('orderLines').models,
-                    paymentlines: order.get('paymentLines').models,
-                    paymentdetail: payment_detail,
-                    paymentamount: payment_amount,
-                    paymentno: payment_no,
-                }));
-        },
+	    refresh: function() {
+	              var order = this.pos.get('selectedOrder');
+	              var payment_detail = order.get_payment_detail();
+	              var payment_amount = order.get_payment_amount();
+	              $('.pos-receipt-container', this.$el).html(QWeb.render('CustomerPosTicket',{
+	                      widget:this,
+	                      order: order,
+	                      orderlines: order.get('orderLines').models,
+	                      paymentlines: order.get('paymentLines').models,
+                    	  paymentdetail: payment_detail,
+                          paymentamount: payment_amount,
+	                  }));
+	    },
         close: function(){
             this._super();
         }
     });
+	module.ReceiptScreenWidget = module.ScreenWidget.extend({
+        template: 'ReceiptScreenWidget',
 
+        show_numpad:     false,
+        show_leftpane:   false,
+		
+        show: function(){
+            this._super();
+            var self = this;
+
+            var print_button = this.add_action_button({
+                    label: _t('Print'),
+                    icon: '/point_of_sale/static/src/img/icons/png48/printer.png',
+                    click: function(){ self.print(); },
+                });
+
+            var finish_button = this.add_action_button({
+                    label: _t('Next Order'),
+                    icon: '/point_of_sale/static/src/img/icons/png48/go-next.png',
+                    click: function() { self.finishOrder(); },
+                });
+
+            this.refresh();
+
+            if (!this.pos.get('selectedOrder')._printed){ 
+                var no_of_tickets = this.pos.config.no_of_sale_tickets; //No of tickets to print
+				this.print_ticket(no_of_tickets);			
+            }
+
+            //
+            // The problem is that in chrome the print() is asynchronous and doesn't
+            // execute until all rpc are finished. So it conflicts with the rpc used
+            // to send the orders to the backend, and the user is able to go to the next 
+            // screen before the printing dialog is opened. The problem is that what's 
+            // printed is whatever is in the page when the dialog is opened and not when it's called,
+            // and so you end up printing the product list instead of the receipt... 
+            //
+            // Fixing this would need a re-architecturing
+            // of the code to postpone sending of orders after printing.
+            //
+            // But since the print dialog also blocks the other asynchronous calls, the
+            // button enabling in the setTimeout() is blocked until the printing dialog is 
+            // closed. But the timeout has to be big enough or else it doesn't work
+            // 2 seconds is the same as the default timeout for sending orders and so the dialog
+            // should have appeared before the timeout... so yeah that's not ultra reliable. 
+
+            finish_button.set_disabled(true);   
+            setTimeout(function(){
+                finish_button.set_disabled(false);
+            }, 2000);
+        },
+        print_ticket: function(no){ 
+			if(this.pos.config.silent_printing){
+            	// Catch error in case addon is not present - Tahir
+            	try{
+                    //Always use default printer.
+                    var listOfPrinters = jsPrintSetup.getPrintersList();
+                    var default_printer = listOfPrinters.substr(0,listOfPrinters.indexOf(','));
+                    //alert(default_printer);
+                    jsPrintSetup.setPrinter(default_printer);
+                    
+                    //sets no of copies to print
+                    jsPrintSetup.setOption('numCopies', no);
+                    
+                    //set silent printing
+                    jsPrintSetup.setOption('printSilent', 1);
+                    setTimeout(function() {
+                        jsPrintSetup.print();
+                    }, 2000);
+                    
+                    this.pos.get('selectedOrder')._printed = true;
+                    jsPrintSetup.clearSilentPrint();
+             
+            	}catch(err){
+                	//Use normal window printing
+                	this.pos.get('selectedOrder')._printed = true;
+                	setTimeout(function() {
+                        window.print();
+                    }, 1000);
+            	}
+			}else{
+                //Use normal window printing
+                this.pos.get('selectedOrder')._printed = true;
+                setTimeout(function() {
+                        window.print();
+                    }, 1000);
+			}
+        },
+	    refresh: function() {
+	              var order = this.pos.get('selectedOrder');
+	              $('.pos-receipt-container', this.$el).html(QWeb.render('PosTicket',{
+	                      widget:this,
+	                      order: order,
+	                      orderlines: order.get('orderLines').models,
+	                      paymentlines: order.get('paymentLines').models,
+	                  }));
+	    },
+        print: function() {
+            this.pos.get('selectedOrder')._printed = true;
+            window.print();
+        },
+        finishOrder: function() {
+            this.pos.get('selectedOrder').destroy();
+        },
+        close: function(){
+            this._super();
+        }
+		
+	});
+	
     module.PaypadButtonWidget = module.PosBaseWidget.extend({
         template: 'PaypadButtonWidget',
         init: function(parent, options){
@@ -344,9 +448,7 @@ openerp.ta_pos_enhanced = function(instance){
                     self.pos_widget.screen_selector.set_current_screen('payment');
                     //console.log('Payment');  
                 }
-                
             });
-            
         },
     });
     
@@ -401,7 +503,6 @@ openerp.ta_pos_enhanced = function(instance){
             return this.invoice_no;
         },
         get_payment_no: function(){
-            
             return this.payment_no;
         },
         getChange: function() {
@@ -413,7 +514,6 @@ openerp.ta_pos_enhanced = function(instance){
             return 0;
         },
         get_balance: function(){
-
             var balance = this.getPaidTotal() - this.getTotalTaxIncluded();
             if(balance < 0)
                 return balance;
@@ -723,7 +823,6 @@ openerp.ta_pos_enhanced = function(instance){
                 $("input").blur();
             },250);
         },
-        
     });
     
     module.CustomerPaymentWidget = module.PopUpWidget.extend({
@@ -761,9 +860,7 @@ openerp.ta_pos_enhanced = function(instance){
             contents.find('.layby-payment input').on('keyup',function(event){
                     self.pos.get('selectedOrder').set_payment_amount(this.value);
                     //console.log('value', this.value);
-                    //self.update_payment_summary(layby, contents);
-                });           
-            //contents.empty();  
+                });        
         },
 		customer_payment_via_pos: function(){
 			var self = this;
