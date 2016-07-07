@@ -27,8 +27,7 @@ openerp.pos_custom_ticket_smabirm = function(instance){
 	});
 	
 	
-    module.ReceiptScreenWidget.include({
-        
+    module.ReceiptScreenWidget.include({    
         refresh: function() {
             var order = this.pos.get('selectedOrder');
 			var customer = order.get_client();
@@ -44,6 +43,30 @@ openerp.pos_custom_ticket_smabirm = function(instance){
                     invoice : invoice_no,
                     orderlines: order.get('orderLines').models,
                     paymentlines: order.get('paymentLines').models,
+                }));
+        },
+    });
+	
+    module.CustomerReceiptScreenWidget.include({    
+        refresh: function() {
+            var order = this.pos.get('selectedOrder');
+			var customer = order.get_client();
+			var partner = '';
+            var payment_detail = order.get_payment_detail();
+            var payment_amount = order.get_payment_amount();
+            var payment_no = order.get_payment_no();
+			if(customer){
+				partner = customer;
+			}
+            $('.pos-receipt-container', this.$el).html(QWeb.render('CustomerPosTicket',{
+                    widget:this,
+                    order: order,
+					partner : partner,
+                    orderlines: order.get('orderLines').models,
+                    paymentlines: order.get('paymentLines').models,
+                    paymentdetail: payment_detail,
+                    paymentamount: payment_amount,
+                    paymentno: payment_no,
                 }));
         },
     });
