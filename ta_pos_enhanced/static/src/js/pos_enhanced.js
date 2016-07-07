@@ -480,7 +480,6 @@ openerp.ta_pos_enhanced = function(instance){
         },
         // returns the amount of money on this paymentline
         get_payment_amount: function(){
-            
             return this.payment_amount;
         },
         set_payment_amount: function(value){
@@ -496,7 +495,6 @@ openerp.ta_pos_enhanced = function(instance){
            this.payment_detail = payment;
         },
         get_payment_detail: function(){
-            
             return this.payment_detail;
         },
         get_invoice_no: function(){
