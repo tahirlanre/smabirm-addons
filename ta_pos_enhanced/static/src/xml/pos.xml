@@ -63,22 +63,8 @@
 	                            Select Payment Method
 	                        </span>
 	                </div>
-	                <br />
-                
+	                <br />  
 	                <div class='payment-info'>
-                    
-	                    <!--<div class="infoline">
-	                        <span class='left-block'>
-	                            Remaining:
-	                        </span>
-	                        <span class="right-block payment-remaining"></span>
-	                    </div>
-	                    <div class="infoline bigger" >
-	                        <span class='left-block'>
-	                            Change:
-	                        </span>
-	                        <span class="right-block payment-change"></span>
-	                    </div>!-->
 	                </div>
 	                <div class='payment-lines'></div>
 	            </div>
@@ -108,58 +94,9 @@
                 </div>
                 <br />
             </t>
-            <!--<table>
-                <colgroup>
-                    <col width='50%' />
-                    <col width='25%' />
-                    <col width='25%' />
-                </colgroup>
-                <tr t-foreach="orderlines" t-as="orderline">
-                    <td>
-                        <t t-esc="orderline.get_product().display_name"/>
-                        <t t-if="orderline.get_discount() > 0">
-                            <div class="pos-disc-font">
-                                With a <t t-esc="orderline.get_discount()"/>% discount
-                            </div>
-                        </t>
-                    </td>
-                    <td class="pos-right-align">
-                        <t t-esc="orderline.get_quantity_str_with_unit()"/>
-                    </td>
-                    <td class="pos-right-align">
-                        <t t-esc="widget.format_currency(orderline.get_display_price())"/>
-                    </td>
-                </tr>
-            </table>-->
+        
             <br />
-            <!--<table>
-                <tr>
-                    <td>Subtotal:</td>
-                    <td class="pos-right-align">
-                        <t t-esc="widget.format_currency(order.getSubtotal())"/>
-                    </td>
-                </tr>
-                <t t-foreach="order.getTaxDetails()" t-as="taxdetail">
-                    <tr>
-                        <td><t t-esc="taxdetail.name" /></td>
-                        <td class="pos-right-align">
-                            <t t-esc="widget.format_currency(taxdetail.amount)" />
-                        </td>
-                    </tr>
-                </t>
-                <tr>
-                    <td>Discount:</td>
-                    <td class="pos-right-align">
-                        <t t-esc="widget.format_currency(order.getDiscountTotal())"/>
-                    </td>
-                </tr>
-                <tr class="emph">
-                    <td>Total:</td>
-                    <td class="pos-right-align">
-                        <t t-esc="widget.format_currency(order.getTotalTaxIncluded())"/>
-                    </td>
-                </tr>
-            </table>-->
+       
 			<table>            
                 <td>
                     <t t-esc="paymentdetail"/>
@@ -169,64 +106,12 @@
                 </td>
 			</table>
             <br />
-            <!--<table>
-                <tr><td>Change:</td><td class="pos-right-align">
-                    <t t-esc="widget.format_currency(order.getChange())"/>
-                    </td></tr>
-            </table>-->
             <t t-if="widget.pos.config.receipt_footer">
                 <br />
                 <div style='text-align:center'>
                     <t t-esc="widget.pos.config.receipt_footer" />
                 </div>
             </t>
-	
-           <!-- <div id="company_logo" class="pos-center-align"><img t-att-src="'data:image/png;base64,'+widget.pos.company.logo"/>
-            </div>
-			<br />
-				<div class="pos-center-receipt-heading"><t t-esc="widget.pos.company.name"/></div>
-                <div class="pos-center-receipt-address">Distributors of Indomie, Spaghetti, Sugar, Macarony, Chivita, La Casera, 5 Alive etc.</div>
-                <div class="pos-center-receipt-heading">OFFICE ADDRESS</div>
-                <div class="pos-center-receipt-address">Shop No. 7, Daniel Ogbaje street</div>
-                <div class="pos-center-receipt-address">Garki II Model Market, Garki-Abuja</div>
-				<div class="pos-center-receipt-heading">BRANCH ADDRESS</div>
-				<div class="pos-center-receipt-address">23 Wada Aliyu Street</div>
-				<div class="pos-center-receipt-address">Garki Model Market, Abuja, FCT</div>
-				<div class="pos-center-receipt-address">Phone: 08038426365, 08065749605, 08033145279, 08037411979</div>
-			<br />
-            <table>
-				<div class ="pos-center-receipt-heading">PAYMENT RECEIPT <t t-esc="paymentno"/></div>
-            </table>
-	
-				<br />
-				<div style="font-style:italic; font-weight:bold"><t t-esc="partner.name"/></div>
-				<table>
-                        <div><t t-esc="order.uid"/></div>          
-						<div><t t-esc="'Date:'+new Date().toString('d-MM-yyyy')"/> <t t-esc="new Date().toString(Date.CultureInfo.formatPatterns.shortTime)"/></div>
-                        <div>Served by: <t t-esc="widget.pos.cashier ? widget.pos.cashier.name : widget.pos.user.name"/></div>
-				</table>
-				
-				<hr />
-				
-				<table>            
-                    <td>
-                        <t t-esc="paymentdetail"/>
-                    </td>
-                    <td class="pos-right-align">
-                        <t t-esc="widget.format_currency(paymentamount)"/>
-                    </td>
-				</table>
-                <br />	
-				<hr />
-				
-            
-            <div class="pos-center-align">Thanks for your patronage!</div>
-            <t t-if="widget.pos.config.receipt_footer">
-                <br />
-                <div style='text-align:center'>
-                    <t t-esc="widget.pos.config.receipt_footer" />
-                </div>
-            </t>-->
         </div>
     </t>
     <t t-name="CustomerXmlReceipt">
@@ -267,46 +152,6 @@
                 </t>
             </div>
             <br /><br />
-
-            <!-- Orderlines -->
-
-            <!--<div line-ratio='0.6'>-->
-                <!--<t t-foreach='receipt.orderlines' t-as='line'>-->
-                    <!--<t t-set='simple' t-value='line.discount === 0 and line.unit_name === "Unit(s)" and line.quantity === 1' />-->
-                    <!--<t t-if='simple'>-->
-                        <!--<line>-->
-                            <!--<left><t t-esc='line.product_name' /></left>-->
-                            <!--<right><value><t t-esc='line.price_display' /></value></right>-->
-                        <!--</line>-->
-                    <!--</t>-->
-                    <!--<t t-if='!simple'>-->
-                        <!--<line><left><t t-esc='line.product_name' /></left></line>-->
-                        <!--<t t-if='line.discount !== 0'>-->
-                            <!--<line indent='1'><left>Discount: <t t-esc='line.discount' />%</left></line>-->
-                        <!--</t>-->
-                        <!--<line indent='1'>-->
-                            <!--<left>-->
-                                <!--<value value-decimals='3' value-autoint='on'>-->
-                                    <!--<t t-esc='line.quantity' />-->
-                                <!--</value>-->
-                                <!--<t t-if='line.unit_name !== "Unit(s)"'>-->
-                                    <!--<t t-esc='line.unit_name' />-->
-                                <!--</t>-->
-                                <!--x-->
-                                <!--<value value-decimals='2'>-->
-                                    <!--<t t-esc='line.price' />-->
-                                <!--</value>-->
-                            <!--</left>-->
-                            <!--<right>-->
-                                <!--<value><t t-esc='line.price_display' /></value>-->
-                            <!--</right>-->
-                        <!--</line>-->
-                    <!--</t>-->
-                <!--</t>-->
-            <!--</div>-->
-
-            <!-- Subtotal -->
-
             <t t-set='taxincluded' t-value='Math.abs(receipt.subtotal - receipt.total_with_tax) &lt;= 0.000001' />
             <t t-if='!taxincluded'>
                 <line><right>--------</right></line>
