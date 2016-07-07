@@ -41,15 +41,25 @@ openerp.ta_pos_enhanced = function(instance){
         load_server_data: function(){
             var self = this;
             var loaded = PosModelSuper.prototype.load_server_data.call(this);
-
             loaded = loaded.then(function(){
+                return self.fetch(
+                    'res.partner',
+                    ['balance','credit_limit_restriction','credit_limit'],
+                    [['customer','=',true]],
+                    {}
+                );
+            }).then(function(partners){
+                $.each(partners, function(){
+                    $.extend(self.db.get_partner_by_id(this.id) || {}, this)
+                });
+                return $.when()
+            }).then(function(){
                 return self.fetch(
                     'product.product',
                     ['qty_available'],
                     [['sale_ok','=',true],['available_in_pos','=',true]],
-                    {}
+                    {'location': self.config.stock_location_id[0]}
                 );
-
             }).then(function(products){
                 $.each(products, function(){
                     $.extend(self.db.get_product_by_id(this.id) || {}, this)
@@ -83,11 +93,9 @@ openerp.ta_pos_enhanced = function(instance){
             }
             if (client){
                 if(order.get_balance()){
-                    //console.log(bal);
                     client.balance -= bal;
                     return;
                 }
-                
                 if(bal && (currentScreen == 'customer_payment')){
                     client.balance -= bal;
                     return;
@@ -95,7 +103,6 @@ openerp.ta_pos_enhanced = function(instance){
             }
             return pushed;
         },
-        
         push_and_invoice_order: function(order){
             var self = this;
             var invoiced = new $.Deferred(); 
@@ -132,9 +139,7 @@ openerp.ta_pos_enhanced = function(instance){
                      //   active_ids:order_server_id,
                     //}});
                     //self.pos_widget.screen_selector.set_current_screen('receipt')
-                   // console.log(order_server_id);
                     order.invoice_no = order_server_id[0];
-                    //console.log(order.get_invoice_no(order));
                     invoiced.resolve();
                     done.resolve();
                 });
@@ -146,7 +151,6 @@ openerp.ta_pos_enhanced = function(instance){
                     client.balance -= bal;
                     //return;
                 }
-				
 	            if (order){
 	                order.get('orderLines').each(function(line){
 	                    var product = line.get_product();
@@ -155,9 +159,7 @@ openerp.ta_pos_enhanced = function(instance){
 	                })
 	            }
                 return done;
-
             });
-
             return invoiced;
         },
     });
