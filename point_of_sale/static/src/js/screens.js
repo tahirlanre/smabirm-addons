@@ -946,12 +946,8 @@ function openerp_pos_screens(instance, module){ //module is instance.point_of_sa
 
             this.refresh();
 
-            if (!this.pos.get('selectedOrder')._printed){ 
-				
-                var numOfTickets = 3; //No of tickets to print
-				
-					this.print_ticket(numOfTickets);	
-					
+            if (!this.pos.get('selectedOrder')._printed) {
+                this.print();
             }
 
             //
@@ -980,42 +976,6 @@ function openerp_pos_screens(instance, module){ //module is instance.point_of_sa
             this.pos.get('selectedOrder')._printed = true;
             window.print();
         },
-		print_ticket: function(no){ 
-            
-            // Catch error in case addon is not present - Tahir
-            try{
-                    
-                    //Always use default printer.
-                    var listOfPrinters = jsPrintSetup.getPrintersList();
-                    var default_printer = listOfPrinters.substr(0,listOfPrinters.indexOf(','));
-                    //alert(default_printer);
-                    jsPrintSetup.setPrinter(default_printer);
-                    
-                    //sets no of copies to print
-                    jsPrintSetup.setOption('numCopies', no);
-                    
-                    //set silent printing
-                    jsPrintSetup.setOption('printSilent', 1);
-					setTimeout(function(){
-						jsPrintSetup.print();
-					}, 1000);
-                    
-                    this.pos.get('selectedOrder')._printed = true;
-                    jsPrintSetup.clearSilentPrint();
-             
-            }catch(err){
-                
-                //Use normal window printing
-                this.pos.get('selectedOrder')._printed = true;
-				setTimeout(function(){
-						window.print();
-					}, 1000);
-                    
-                
-            }
-            
-            
-        },
         finishOrder: function() {
             this.pos.get('selectedOrder').destroy();
         },
@@ -1032,7 +992,6 @@ function openerp_pos_screens(instance, module){ //module is instance.point_of_sa
             this._super();
         }
     });
-
 
     module.PaymentScreenWidget = module.ScreenWidget.extend({
         template: 'PaymentScreenWidget',
