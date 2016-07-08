@@ -159,7 +159,6 @@
             <button class="input-button number-char">4</button>
             <button class="input-button number-char">5</button>
             <button class="input-button number-char">6</button>
-           
             <button class="mode-button" data-mode='discount'>Disc</button>
             <br />
             <button class="input-button number-char">7</button>
@@ -436,7 +435,7 @@
                 <section class="full-content">
                     <div class='window'>
                         <section class='subwindow collapsed'>
-                            <div class='subwindow-container'>
+                            <div class='subwindow-container collapsed'>
                                 <div class='subwindow-container-fix client-details-contents'>
                                 </div>
                             </div>
@@ -752,7 +751,7 @@
                 </t>
                 <t t-if="product.to_weight">
                     <span class="price-tag">
-                        <t t-esc="widget.format_currency(product.price,'Product Price')+'/Kg'"/>
+                        <t t-esc="widget.format_currency(product.price,'Product Price')+'/'+widget.pos.units_by_id[product.uom_id[0]].name"/>
                     </span>
                 </t>
             </div>
@@ -910,8 +909,10 @@
                 </span>
                 <t t-if="widget.order.get_client()">
                     <i class='fa fa-user'/>
+                    <t t-esc="widget.order.get_client_name()"/>
                 </t>
-                <t t-esc="(widget.order.get_client() ? widget.order.get_client_name()+' : ':'Unknown Customer: ') + widget.order.get('creationDate').toString('t')"/>
+                <t t-if="!widget.order.get_client()">Unknown Customer</t>:
+                <t t-esc="widget.order.get('creationDate').toString('t')"/>
             </t>
             <t t-if='!widget.selected'>
                 <span class='order-sequence'>
@@ -953,7 +954,7 @@
                 <tr t-foreach="orderlines" t-as="orderline">
                     <td>
                         <t t-esc="orderline.get_product().display_name"/>
-                        <t t-if="orderline.get_discount() > 0">
+                         <t t-if="orderline.get_discount() > 0">
                             <div class="pos-disc-font">
                                 With a <t t-esc="orderline.get_discount()"/>% discount
                             </div>
@@ -972,7 +973,7 @@
                 <tr>
                     <td>Subtotal:</td>
                     <td class="pos-right-align">
-                        <t t-esc="widget.format_currency(order.getSubtotal())"/>
+                        <t t-esc="widget.format_currency(order.getTotalTaxExcluded())"/>
                     </td>
                 </tr>
                 <t t-foreach="order.getTaxDetails()" t-as="taxdetail">
