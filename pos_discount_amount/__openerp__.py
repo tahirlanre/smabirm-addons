@@ -21,7 +21,7 @@
 
 
 {
-    'name': 'Point of Sale Discount Amount',
+    'name': 'Point of Sale Discount Amount for SNL',
     'version': '1.0',
     'category': 'Point of Sale',
     'sequence': 6,
