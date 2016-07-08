@@ -34,7 +34,7 @@ Discount Amount
 
 """,
     'author': 'Tahir Aduragba',
-    'depends': ['point_of_sale'],
+    'depends': ['point_of_sale', 'ta_pos_enhanced'],
     'data': [
         #'views/views.xml', not needed so far
         'discount.xml',
