@@ -478,6 +478,17 @@ openerp.ta_pos_enhanced = function(instance){
             this.temporary = attributes.temporary || false;
             return this;
         },
+        generateUniqueId: function() {
+            function zero_pad(num,size){
+                var s = ""+num;
+                while (s.length < size) {
+                    s = "0" + s;
+                }
+                return s;
+            }
+            return zero_pad(this.pos.pos_session.id,4) +'-'+
+                   zero_pad(this.sequence_number,4);
+        },
         // returns the amount of money on this paymentline
         get_payment_amount: function(){
             return this.payment_amount;
