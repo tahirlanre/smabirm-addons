@@ -1,7 +1,21 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="ChangeListManager">
-    <list default="true" id="63a6db7e-3476-49c4-a298-24ffb9796b9f" name="Default" comment="" />
+    <list default="true" id="63a6db7e-3476-49c4-a298-24ffb9796b9f" name="Default" comment="">
+      <change type="DELETED" beforePath="$PROJECT_DIR$/point_of_sale/static/description/pos_checkout.jpg" afterPath="" />
+      <change type="DELETED" beforePath="$PROJECT_DIR$/point_of_sale/static/img/IMG_0010.png" afterPath="" />
+      <change type="DELETED" beforePath="$PROJECT_DIR$/point_of_sale/static/img/Thumbs.db" afterPath="" />
+      <change type="DELETED" beforePath="$PROJECT_DIR$/point_of_sale/static/img/current-cadbury-logo.png" afterPath="" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/point_of_sale/static/src/js/db.js" afterPath="$PROJECT_DIR$/point_of_sale/static/src/js/db.js" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/point_of_sale/static/description/index.html" afterPath="$PROJECT_DIR$/point_of_sale/static/description/index.html" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/point_of_sale/static/src/js/models.js" afterPath="$PROJECT_DIR$/point_of_sale/static/src/js/models.js" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/point_of_sale/static/src/css/pos.css" afterPath="$PROJECT_DIR$/point_of_sale/static/src/css/pos.css" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/point_of_sale/static/src/xml/pos.xml" afterPath="$PROJECT_DIR$/point_of_sale/static/src/xml/pos.xml" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/ta_pos_enhanced/static/src/css/pos_enhanced.css" afterPath="$PROJECT_DIR$/ta_pos_enhanced/static/src/css/pos_enhanced.css" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/point_of_sale/static/src/js/screens.js" afterPath="$PROJECT_DIR$/point_of_sale/static/src/js/screens.js" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/ta_pos_enhanced/views.xml" afterPath="$PROJECT_DIR$/ta_pos_enhanced/views.xml" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/point_of_sale/static/src/js/widgets.js" afterPath="$PROJECT_DIR$/point_of_sale/static/src/js/widgets.js" />
+    </list>
     <ignored path="addons-smabirm.iws" />
     <ignored path=".idea/workspace.xml" />
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
