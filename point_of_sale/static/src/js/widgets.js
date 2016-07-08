@@ -51,10 +51,8 @@ function openerp_pos_widgets(instance, module){ //module is instance.point_of_sa
             this._super(parent);
             this.state = new module.NumpadState();
             window.numpadstate = this.state;
-            //widget = this;
             var self = this;
         },
-       
         start: function() {
             this.state.bind('change:mode', this.changedMode, this);
             this.changedMode();
@@ -541,6 +539,9 @@ function openerp_pos_widgets(instance, module){ //module is instance.point_of_sa
             this.product_list_widget.set_product_list(products);
 
             this.el.querySelector('.searchbox input').addEventListener('keyup',this.search_handler);
+            $('.searchbox input', this.el).keypress(function(e){
+                e.stopPropagation();
+            });
 
             this.el.querySelector('.search-clear').addEventListener('click',this.clear_search_handler);
 
@@ -964,6 +965,13 @@ function openerp_pos_widgets(instance, module){ //module is instance.point_of_sa
         start: function() {
             var self = this;
             return self.pos.ready.done(function() {
+                if ($.browser.chrome) {
+                    var chrome_version = $.browser.version.split('.')[0];
+                    if (parseInt(chrome_version, 10) >= 50) {
+                        openerp.loadCSS('/point_of_sale/static/src/css/chrome50.css');
+                    }
+                }
+
                 // remove default webclient handlers that induce click delay
                 $(document).off();
                 $(window).off();
@@ -1021,7 +1029,7 @@ function openerp_pos_widgets(instance, module){ //module is instance.point_of_sa
 
                 self.$('.loader').animate({opacity:0},1500,'swing',function(){self.$('.loader').addClass('oe_hidden');});
                 
-                //instance.web.cordova.send('posready');
+                instance.web.cordova.send('posready');
 
                 self.pos.push_order();
 
@@ -1236,7 +1244,7 @@ function openerp_pos_widgets(instance, module){ //module is instance.point_of_sa
 
             function close(){
                 self.pos.push_order().then(function(){
-                    //instance.web.cordova.send('poslogout');
+                    instance.web.cordova.send('poslogout');
                     return new instance.web.Model("ir.model.data").get_func("search_read")([['name', '=', 'action_client_pos_menu']], ['res_id']).pipe(function(res) {
                         window.location = '/web#action=' + res[0]['res_id'];
                     },function(err,event) {
