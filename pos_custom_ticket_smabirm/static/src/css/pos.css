@@ -1,3 +1,28 @@
+.pos .pos-right-align {
+    text-align: right;
+	padding-right:8px;
+}
+.pos .pos-qty-align {
+    padding-left: 30px;
+}
+.pos .pos-amount-align {
+    padding-left: 10px;
+}
+.pos .pos-sale-ticket {
+    text-align: left;
+    width: 300px;
+    background-color: white;
+    margin: 0px;
+    padding: 0px;
+    font-size: 14px;
+    padding-bottom:30px;
+    display: inline-block;
+    font-family: "Lucida Bright";
+    border: solid 1px rgb(220,220,220);
+    border-radius: 3px;
+    overflow: hidden;
+}
+
 .pos .customer-payment {
     width: 220px;
     height: 45px;
