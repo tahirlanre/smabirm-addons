@@ -166,6 +166,9 @@ td {
 .pos .window .subwindow.collapsed{
     height: 0px;
 }
+.pos .window .subwindow-container .collapsed{
+    height: 0px;
+}
 .pos .subwindow .subwindow-container{
     display: table-cell;
     position: relative;
@@ -240,13 +243,6 @@ td {
 }
 .pos .pos-right-align {
     text-align: right;
-	padding-right:8px;
-}
-.pos .pos-qty-align {
-    padding-left: 30px;
-}
-.pos .pos-amount-align {
-    padding-left: 10px;
 }
 .pos .pos-center-align {
     text-align: center;
@@ -1098,18 +1094,18 @@ td {
     text-align: left;
     width: 300px;
     background-color: white;
-    margin: 0px;
-    padding: 0px;
+    margin: 20px;
+    padding: 15px;
     font-size: 14px;
     padding-bottom:30px;
     display: inline-block;
-    font-family: "Lucida Bright";
+    font-family: "Inconsolata";
     border: solid 1px rgb(220,220,220);
     border-radius: 3px;
     overflow: hidden;
 }
 .pos .pos-sale-ticket pre{
-    font-family: "Lucida Bright";
+    font-family: "Inconsolata";
 }
 .pos .pos-sale-ticket .emph{
     font-size: 20px;
@@ -1179,10 +1175,8 @@ td {
         margin-left: auto !important;
         margin-right: auto !important;
         border: none !important;
-        font-size: 12px !important;
+        font-size: 13px !important;
         width: 266px !important;
-		
-		
     }
 }
 
