@@ -11,3 +11,9 @@
 ta_pos_enhanced/pos_enhanced.py~
 
 .idea/workspace.xml
+
+point_of_sale/static/img/
+
+point_of_sale/static/src/img/
+
+.DS_Store
