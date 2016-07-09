@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<openerp>
+    <data>
+        <template id="assets_backend" name="point_of_sale assets2" inherit_id="web.assets_backend">
+            <xpath expr="." position="inside">
+                <script type="text/javascript" src="/pos_custom_ticket_smabirm/static/src/js/pos.js"></script>
+            </xpath>
+        </template>
+        <template id="index" name="pos_custom_ticket index" inherit_id="point_of_sale.index">
+            <xpath expr="//link[@id='pos-stylesheet']" position="after">
+                <link rel="stylesheet" href="/pos_custom_ticket_smabirm/static/src/css/pos.css" id="pos_custom_receipt-stylesheet"/>
+            </xpath>
+        </template>
+    </data>
+</openerp>

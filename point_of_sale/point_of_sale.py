@@ -875,6 +875,8 @@ class pos_order(osv.osv):
         assert journal_id or statement_id, "No statement_id or journal_id passed to the method!"
 
         journal = self.pool['account.journal'].browse(cr, uid, journal_id, context=context)
+        
+        #print journal
         # use the company of the journal and not of the current user
         company_cxt = dict(context, force_company=journal.company_id.id)
         account_def = property_obj.get(cr, uid, 'property_account_receivable', 'res.partner', context=company_cxt)

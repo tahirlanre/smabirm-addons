@@ -20,13 +20,12 @@
 ##############################################################################
 
 {
-    'name': 'Enhanced POS',
+    'name': 'Enhanced POS for Smabirm',
     'version': '1.0.0',
     'category': 'Point Of Sale',
     'sequence': 6,
     'summary': '',
     'description': """
-        - Custom receipt
         - Silent receipt printing
         - POS credit sales
         - Immediate POS sales posting
@@ -41,8 +40,8 @@
     
     'installable': True,
     
-    'data': ['pos_payment_view.xml',
-    'customer_payment.xml',
+    'data': ['views.xml',
+    'template.xml',
     'view/report_detailsofsales.xml',
     'wizard/debtors_report.xml',
     'view/report_debtorsreport.xml'],

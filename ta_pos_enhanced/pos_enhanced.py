@@ -32,143 +32,6 @@ import time
 
 _logger = logging.getLogger(__name__)
             
-            
-class account_invoice_tax(models.Model):
-    _inherit = "account.invoice.tax"        
-    #tahir
-    @api.v8
-    def compute(self, invoice):
-        tax_grouped = {}
-        currency = invoice.currency_id.with_context(date=invoice.date_invoice or fields.Date.context_today(invoice))
-        company_currency = invoice.company_id.currency_id
-        for line in invoice.invoice_line:
-            taxes = line.invoice_line_tax_id.compute_all(
-                (line.price_unit  - line.discount),
-                line.quantity, line.product_id, invoice.partner_id)['taxes']
-            for tax in taxes:
-                val = {
-                    'invoice_id': invoice.id,
-                    'name': tax['name'],
-                    'amount': tax['amount'],
-                    'manual': False,
-                    'sequence': tax['sequence'],
-                    'base': currency.round(tax['price_unit'] * line['quantity']),
-                }
-                if invoice.type in ('out_invoice','in_invoice'):
-                    val['base_code_id'] = tax['base_code_id']
-                    val['tax_code_id'] = tax['tax_code_id']
-                    val['base_amount'] = currency.compute(val['base'] * tax['base_sign'], company_currency, round=False)
-                    val['tax_amount'] = currency.compute(val['amount'] * tax['tax_sign'], company_currency, round=False)
-                    val['account_id'] = tax['account_collected_id'] or line.account_id.id
-                    val['account_analytic_id'] = tax['account_analytic_collected_id']
-                else:
-                    val['base_code_id'] = tax['ref_base_code_id']
-                    val['tax_code_id'] = tax['ref_tax_code_id']
-                    val['base_amount'] = currency.compute(val['base'] * tax['ref_base_sign'], company_currency, round=False)
-                    val['tax_amount'] = currency.compute(val['amount'] * tax['ref_tax_sign'], company_currency, round=False)
-                    val['account_id'] = tax['account_paid_id'] or line.account_id.id
-                    val['account_analytic_id'] = tax['account_analytic_paid_id']
-
-                # If the taxes generate moves on the same financial account as the invoice line
-                # and no default analytic account is defined at the tax level, propagate the
-                # analytic account from the invoice line to the tax line. This is necessary
-                # in situations were (part of) the taxes cannot be reclaimed,
-                # to ensure the tax move is allocated to the proper analytic account.
-                if not val.get('account_analytic_id') and line.account_analytic_id and val['account_id'] == line.account_id.id:
-                    val['account_analytic_id'] = line.account_analytic_id.id
-
-                key = (val['tax_code_id'], val['base_code_id'], val['account_id'])
-                if not key in tax_grouped:
-                    tax_grouped[key] = val
-                else:
-                    tax_grouped[key]['base'] += val['base']
-                    tax_grouped[key]['amount'] += val['amount']
-                    tax_grouped[key]['base_amount'] += val['base_amount']
-                    tax_grouped[key]['tax_amount'] += val['tax_amount']
-
-        for t in tax_grouped.values():
-            t['base'] = currency.round(t['base'])
-            t['amount'] = currency.round(t['amount'])
-            t['base_amount'] = currency.round(t['base_amount'])
-            t['tax_amount'] = currency.round(t['tax_amount'])
-
-        return tax_grouped            
-
-            
-class account_invoice_line(models.Model):
-    _inherit = "account.invoice.line"
-
-    @api.one
-    @api.depends('price_unit', 'discount', 'invoice_line_tax_id', 'quantity',
-        'product_id', 'invoice_id.partner_id', 'invoice_id.currency_id')
-    #tahir
-    def _compute_price(self):
-        price = self.price_unit - self.discount
-        taxes = self.invoice_line_tax_id.compute_all(price, self.quantity, product=self.product_id, partner=self.invoice_id.partner_id)
-        self.price_subtotal = taxes['total']
-        if self.invoice_id:
-            self.price_subtotal = self.invoice_id.currency_id.round(self.price_subtotal)
-    
-    #tahir
-    @api.model
-    def _default_price_unit(self):
-        if not self._context.get('check_total'):
-            return 0
-        total = self._context['check_total']
-        for l in self._context.get('invoice_line', []):
-            if isinstance(l, (list, tuple)) and len(l) >= 3 and l[2]:
-                vals = l[2]
-                price = vals.get('price_unit', 0)  - vals.get('discount', 0)
-                total = total - (price * vals.get('quantity'))
-                taxes = vals.get('invoice_line_tax_id')
-                if taxes and len(taxes[0]) >= 3 and taxes[0][2]:
-                    taxes = self.env['account.tax'].browse(taxes[0][2])
-                    tax_res = taxes.compute_all(price, vals.get('quantity'),
-                        product=vals.get('product_id'), partner=self._context.get('partner_id'))
-                    for tax in tax_res['taxes']:
-                        total = total - tax['amount']
-        return total            
-    
-
-    #tahir
-    @api.model
-    def move_line_get(self, invoice_id):
-        inv = self.env['account.invoice'].browse(invoice_id)
-        currency = inv.currency_id.with_context(date=inv.date_invoice)
-        company_currency = inv.company_id.currency_id
-
-        res = []
-        for line in inv.invoice_line:
-            mres = self.move_line_get_item(line)
-            mres['invl_id'] = line.id
-            res.append(mres)
-            tax_code_found = False
-            taxes = line.invoice_line_tax_id.compute_all(
-                (line.price_unit - line.discount),
-                line.quantity, line.product_id, inv.partner_id)['taxes']
-            for tax in taxes:
-                if inv.type in ('out_invoice', 'in_invoice'):
-                    tax_code_id = tax['base_code_id']
-                    tax_amount = line.price_subtotal * tax['base_sign']
-                else:
-                    tax_code_id = tax['ref_base_code_id']
-                    tax_amount = line.price_subtotal * tax['ref_base_sign']
-
-                if tax_code_found:
-                    if not tax_code_id:
-                        continue
-                    res.append(dict(mres))
-                    res[-1]['price'] = 0.0
-                    res[-1]['account_analytic_id'] = False
-                elif not tax_code_id:
-                    continue
-                tax_code_found = True
-
-                res[-1]['tax_code_id'] = tax_code_id
-                res[-1]['tax_amount'] = currency.compute(tax_amount, company_currency)
-
-        return res
-            
 class pos_customer_payment(models.Model):
     _name = 'pos.customer.payment'
     _order = 'id desc'
@@ -179,14 +42,12 @@ class pos_customer_payment(models.Model):
         return True
     
     #def create(self, test, context = context)
-    
-    journal_id = fields.Many2one('account.journal', 'Payment Mode')
+    pos_payment_statement_id = fields.Many2one('account.bank.statement.line', 'Statement Line')
+    journal_id = fields.Many2one('account.journal', 'Payment Method')
     amount = fields.Float('Amount')
     payment_name = fields.Char('Payment Reference')
     payment_date = fields.Date('Payment Date')
     partner_id = fields.Many2one('res.partner', 'Customer')
-    
-
     
 class pos_config(models.Model):
     _inherit = 'pos.config'
@@ -194,8 +55,10 @@ class pos_config(models.Model):
     default_user = fields.Many2one('res.users', string = 'Default User')
     max_discount = fields.Float('Maximum Discount')
     discount_restriction = fields.Boolean('Discount Restriction')
-
-
+    silent_printing = fields.Boolean(default= True, string='Silent Printing')
+    no_of_sale_tickets = fields.Integer(default = 3, string = 'Number of sales tickets to print')
+    no_of_payment_tickets = fields.Integer(default = 2, string = 'Number of payment tickets to print')
+    
 class pos_session(osv.osv):
     _inherit = 'pos.session'
     
@@ -417,7 +280,7 @@ class point_of_sale(models.Model):
                 return []
 
             order_obj = self.browse(cr, uid, order_id, context)
-
+            
             #Tahir
             try:
                 self._create_account_move_line(cr, uid, order_id)
@@ -430,7 +293,7 @@ class point_of_sale(models.Model):
                         }
                     self.pool.get('account.bank.statement.line').process_reconciliation(cr, uid, st_line.id, [vals], context=context)
             except Exception as e:
-                _logger.error('Smabirm Error: %s', tools.ustr(e))
+                _logger.error('Could not process payment for order: %s', tools.ustr(e))
                 return []
 
             if to_invoice:
@@ -472,6 +335,94 @@ class point_of_sale(models.Model):
         return order_id
     
     
+    #Tahir
+    #TODO - Refactor Code, add sufficient comments
+    def pos_customer_payment(self, cr, uid, amount, statement_id, journal_id, partner_id, session_id, ref, context=None):
+        """Create a new payment for the order"""
+        context = dict(context or {})
+        statement_line_obj = self.pool.get('account.bank.statement.line')
+        property_obj = self.pool.get('ir.property')
+        partner_obj = self.pool.get('res.partner')
+        pos_session_obj = self.pool.get('pos.session')
+        pos_customer_payment_obj = self.pool.get('pos.customer.payment')
+        #order = self.browse(cr, uid, order_id, context=context)
+        partner = partner_obj.browse(cr, uid, partner_id, context=context)
+        session = pos_session_obj.browse(cr, uid, session_id, context=context)
+        args = {
+            'amount': amount,
+            'date': time.strftime('%Y-%m-%d'),
+            'name': ref,
+            'partner_id': partner_id and self.pool.get("res.partner")._find_accounting_partner(partner).id or False,
+        }
+
+        #journal_id = data.get('journal', False)
+        #statement_id = data.get('statement_id', False)
+        assert journal_id or statement_id, "No statement_id or journal_id passed to the method!"
+
+        journal = self.pool.get('account.journal').browse(cr, uid, journal_id, context=context)
+        #print journal.company_id
+        #print context
+        #use the company of the journal and not of the current user
+        company_cxt = dict(context, force_company=journal.company_id.id)
+        account_def = property_obj.get(cr, uid, 'property_account_receivable', 'res.partner', context=company_cxt)
+        args['account_id'] = (partner and partner.property_account_receivable \
+                             and partner.property_account_receivable.id) or (account_def and account_def.id) or False
+
+        if not args['account_id']:
+            if not partner_id:
+                msg = _('There is no receivable account defined to make payment.')
+            else:
+                msg = _('There is no receivable account defined to make payment for the partner: "%s" (id:%d).') % (partner.name, partner.id,)
+            raise osv.except_osv(_('Configuration Error!'), msg)
+
+        context.pop('pos_session_id', False)
+
+        for statement in session.statement_ids:
+            if statement.id == statement_id:
+                journal_id = statement.journal_id.id
+                break
+            elif statement.journal_id.id == journal_id:
+                statement_id = statement.id
+                break
+
+        if not statement_id:
+            raise osv.except_osv(_('Error!'), _('You have to open at least one cashbox.'))
+
+        args.update({
+            'statement_id': statement_id,
+            #'pos_statement_id': order_id,
+            'journal_id': journal_id,
+            'ref': session.name,
+        })
+        try:
+            st_line_id = statement_line_obj.create(cr, uid, args, context=context)
+            st_line = statement_line_obj.browse(cr, uid, st_line_id, context=context)
+            #for st_line in statement_line_obj.ids:
+            vals = {
+                    'debit': st_line.amount < 0 and -st_line.amount or 0.0,
+                    'credit': st_line.amount > 0 and st_line.amount or 0.0,
+                    'account_id': st_line.account_id.id,
+                    'name': st_line.name
+                }
+            self.pool.get('account.bank.statement.line').process_reconciliation(cr, uid, st_line.id, [vals], context=context)
+            pos_customer_payment= {
+                'amount': amount,
+                'journal_id' : journal_id,
+                'payment_name' : ref,
+                'payment_date': time.strftime('%Y-%m-%d'),
+                'partner_id': partner_id and self.pool.get("res.partner")._find_accounting_partner(partner).id or False, 
+                'pos_payment_statement_id': st_line.id,   
+            }
+            payment = pos_customer_payment_obj.create(cr, uid, pos_customer_payment, context = context)
+            pos_p = pos_customer_payment_obj.browse(cr, uid, payment, context=context)
+        except Exception as e:
+            _logger.error('Could not process customer payment: %s', tools.ustr(e))
+            return 
+               
+        return pos_p.id
+
+        #return statement_id
+        
     def customer_payment_via_pos(self, cr, uid, partner_id, journal_id, amount, context=None):
         if context is None:
             ctx = {}
@@ -527,78 +478,10 @@ class point_of_sale(models.Model):
                 
                 return pos_p.id
             except Exception as e:
-                _logger.error('which kind wahala sef 2: %s', tools.ustr(e))
+                _logger.error('Error processing customer payment: %s', tools.ustr(e))
+                return
         else:
             return    
-    
-    
-    def customer_payment_return(self, cr, uid, partner_id, journal_id, amount, context=None):
-        if context is None:
-            ctx = {}
-        journal_pool = self.pool.get('account.journal')
-        voucher_obj = self.pool.get('account.voucher')
-        voucher_line_obj = self.pool.get('account.voucher.line')
-        journal = journal_pool.browse(cr, uid, int(journal_id), context=context)
-        pos_payment = self.pool.get('pos.customer.payment')
-        
-        #inv = self.pool.get('account.invoice').browse(cr, uid, payment_info['id'], context=context)
-        res_partner = self.pool.get('res.partner').browse(cr,uid,partner_id,context=context)
-        
-        try:
-            ctx= {
-                    #'payment_expected_currency': inv.currency_id.id,
-                    'default_partner_id': self.pool.get('res.partner')._find_accounting_partner(res_partner).id,
-                    'default_amount': amount,
-                    #'default_reference': inv.name,
-                    #'close_after_process': True,
-                    #'invoice_type': inv.type,
-                    #'invoice_id': inv.id,
-                    #'default_type': 'receipt',
-                    'type': 'receipt',
-                }
-        except Exception as e:
-                _logger.error('Wahala dey small: %s', tools.ustr(e)) 
-                
-        
-        if amount != 0:
-            try:
-                vals = self._account_voucher_fields_1(cr, uid, partner_id, journal_id, amount, context=ctx)
-                del vals['value']['line_cr_ids']
-                del vals['value']['line_dr_ids']
-            except Exception as e:
-                _logger.error('which kind wahala sef 1: %s', tools.ustr(e))
-            
-            try:
-                voucher_id = voucher_obj.create(cr, uid, vals['value'], context=ctx)
-                res = self._account_voucher_fields_1(cr, uid, partner_id, journal_id, amount, context=context)
-                print res
-                if res['value']['line_cr_ids']:
-                    for line in res['value']['line_cr_ids']:
-                        line['voucher_id'] = voucher_id
-                        voucher_line_obj.create(cr, uid, line, context=ctx)
-                if res['value']['line_dr_ids']:
-                    for line in res['value']['line_dr_ids']:
-                        line['voucher_id'] = voucher_id
-                        voucher_line_obj.create(cr, uid, line, context=ctx)
-
-                voucher_obj.signal_workflow(cr, uid, [voucher_id], 'proforma_voucher')
-                
-                test= {
-                        'amount': amount,
-                        'journal_id' : journal_id,
-                        #'payment_name' : 'CP: ',
-                        'payment_date': time.strftime('%Y-%m-%d'),
-                        'partner_id': self.pool.get('res.partner')._find_accounting_partner(res_partner).id,
-                    }
-                   
-                payment = pos_payment.create(cr, uid, test, context = context)
-
-                return True
-            except Exception as e:
-                _logger.error('which kind wahala sef 2: %s', tools.ustr(e))
-        else:
-            return False
-    
     
     def _account_voucher_fields_1(self, cr, uid, customer_id, journal_id, amount, context=None):
         try:
