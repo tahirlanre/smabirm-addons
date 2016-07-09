@@ -109,7 +109,8 @@ class res_partner(models.Model):
         string='Balance', readonly=True,
         digits=dp.get_precision('Account'))
   
-        
+class point_of_sale(models.Model):
+    _name = 'pos.payment' 
 
 class pos_make_payment(osv.osv_memory):
     _inherit = 'pos.make.payment'
