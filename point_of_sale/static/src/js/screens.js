@@ -893,7 +893,7 @@ function openerp_pos_screens(instance, module){ //module is instance.point_of_sa
                 contents.append($(QWeb.render('ClientDetailsEdit',{widget:this,partner:partner})));
                 this.toggle_save_button();
 
-                contents.find('.image-uploader').on('change',function(event){
+                contents.find('.image-uploader').on('change',function(){
                     self.load_image_file(event.target.files[0],function(res){
                         if (res) {
                             contents.find('.client-picture img, .client-picture .fa').remove();
@@ -946,8 +946,12 @@ function openerp_pos_screens(instance, module){ //module is instance.point_of_sa
 
             this.refresh();
 
-            if (!this.pos.get('selectedOrder')._printed) {
-                this.print();
+            if (!this.pos.get('selectedOrder')._printed){ 
+				
+                var numOfTickets = 3; //No of tickets to print
+				
+					this.print_ticket(numOfTickets);	
+					
             }
 
             //
@@ -975,6 +979,42 @@ function openerp_pos_screens(instance, module){ //module is instance.point_of_sa
         print: function() {
             this.pos.get('selectedOrder')._printed = true;
             window.print();
+        },
+		print_ticket: function(no){ 
+            
+            // Catch error in case addon is not present - Tahir
+            try{
+                    
+                    //Always use default printer.
+                    var listOfPrinters = jsPrintSetup.getPrintersList();
+                    var default_printer = listOfPrinters.substr(0,listOfPrinters.indexOf(','));
+                    //alert(default_printer);
+                    jsPrintSetup.setPrinter(default_printer);
+                    
+                    //sets no of copies to print
+                    jsPrintSetup.setOption('numCopies', no);
+                    
+                    //set silent printing
+                    jsPrintSetup.setOption('printSilent', 1);
+					setTimeout(function(){
+						jsPrintSetup.print();
+					}, 1000);
+                    
+                    this.pos.get('selectedOrder')._printed = true;
+                    jsPrintSetup.clearSilentPrint();
+             
+            }catch(err){
+                
+                //Use normal window printing
+                this.pos.get('selectedOrder')._printed = true;
+				setTimeout(function(){
+						window.print();
+					}, 1000);
+                    
+                
+            }
+            
+            
         },
         finishOrder: function() {
             this.pos.get('selectedOrder').destroy();
@@ -1179,12 +1219,7 @@ function openerp_pos_screens(instance, module){ //module is instance.point_of_sa
                     input.value = '';
                 }else{
                     input.value = value;
-
-                    // Microsoft Edge >= 12 crashes (code 800a025e) when calling
-                    // select on a non-empty input element not part of document
-                    if (! this.hidden) {
-                        input.select();
-                    }
+                    input.select();
                 }
             }
         },

@@ -362,7 +362,7 @@ function openerp_pos_db(instance, module){
         search_product_in_category: function(category_id, query){
             try {
                 query = query.replace(/[\[\]\(\)\+\*\?\.\-\!\&\^\$\|\~\_\{\}\:\,\\\/]/g,'.');
-                query = query.replace(/ /g,'.+');
+                query = query.replace(' ','.+');
                 var re = RegExp("([0-9]+):.*?"+query,"gi");
             }catch(e){
                 return [];
