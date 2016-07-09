@@ -52,7 +52,7 @@ class pos_customer_payment(models.Model):
 class pos_config(models.Model):
     _inherit = 'pos.config'
     
-    picking_type_id = fields.Many2one('stock.picking.type', required = True, string = 'Picking Type')
+    picking_type_id = fields.Many2one('stock.picking.type', required = True, string = 'Picking Type')   #Set Picking Type as a required field when configuring Point of Sale
     default_user = fields.Many2one('res.users', string = 'Default User')
     max_discount = fields.Float('Maximum Discount')
     discount_restriction = fields.Boolean('Discount Restriction')
