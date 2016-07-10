@@ -63,10 +63,10 @@
         <field name="model">pos.order</field>
 		<field name="inherit_id" ref="point_of_sale.view_pos_order_filter"/>
         <field name="arch" type="xml">
-			<xpath expr="//search[@string='Search Sales Order']" position="inside">
-				<field name="id" />
+			<field name="name" position="before">
+				<field name="custom_name" />
 				<field name="partner_id"/>
-			</xpath>
+			</field>
         </field>
     </record>
 	

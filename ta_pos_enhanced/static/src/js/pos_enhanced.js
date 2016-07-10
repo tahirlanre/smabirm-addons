@@ -689,8 +689,7 @@ openerp.ta_pos_enhanced = function(instance){
         },
         validate_order: function(options) {
             var self = this;
-
-            //options = {invoice: true};
+			
 			options = options || {};
 			
             var currentOrder = self.pos.get('selectedOrder');
@@ -871,7 +870,6 @@ openerp.ta_pos_enhanced = function(instance){
                                                     pushed.done(function(){
                                                         self.pos_widget.action_bar.set_button_disabled('validation',false);
                                                         self.pos_widget.action_bar.set_button_disabled('invoice',false);
-														//FIXME: prevent duplicated orders
 	                                                    if(self.pos.config.iface_print_via_proxy){
 	                                                        var receipt = currentOrder.export_for_printing();
 	                                                        self.pos.proxy.print_receipt(QWeb.render('XmlReceipt',{
@@ -879,7 +877,7 @@ openerp.ta_pos_enhanced = function(instance){
 	                                                        }));
 	                                                        self.pos.get('selectedOrder').destroy();    //finish order and go back to scan screen
 	                                                    }else{
-	                                                        //self.pos_widget.screen_selector.set_current_screen(self.next_screen);
+	                                                        //FIXME: prevent duplicated orders
 															if(currentOrder.custom_name){
 	                                                             self.pos_widget.screen_selector.set_current_screen(self.next_screen);
 	                                                        }else{
