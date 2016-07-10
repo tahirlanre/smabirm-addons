@@ -156,7 +156,7 @@ class pos_make_payment(osv.osv_memory):
         return self.launch_payment(cr, uid, ids, context=context)
 
         
-class point_of_sale(models.Model):
+class pos_order(models.Model):
     _inherit = 'pos.order'
 
     def check_connection(self, cr, uid, context=None):
