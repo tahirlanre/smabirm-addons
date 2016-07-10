@@ -364,12 +364,12 @@ class pos_order(models.Model):
                 _logger.error('Could not fully process the POS Order: %s', tools.ustr(e))
                 return []
 
-            order_obj = self.browse(cr, uid, order_id, context)
+            current_order = self.browse(cr, uid, order_id, context)
             
             #Tahir
             try:
                 self._create_account_move_line(cr, uid, order_id)
-                for st_line in order_obj.statement_ids:
+                for st_line in current_order.statement_ids:
                     vals = {
                             'debit': st_line.amount < 0 and -st_line.amount or 0.0,
                             'credit': st_line.amount > 0 and st_line.amount or 0.0,
@@ -383,9 +383,9 @@ class pos_order(models.Model):
 
             if to_invoice:
                 self.action_invoice(cr, uid, [order_id], context)
-                #order_obj = self.browse(cr, uid, order_id, context)
+                order_obj = self.browse(cr, uid, order_id, context)
                 self.pool['account.invoice'].signal_workflow(cr, uid, [order_obj.invoice_id.id], 'invoice_open')
-
+        
         return order_ids
     
     def _process_order(self, cr, uid, order, context=None):
