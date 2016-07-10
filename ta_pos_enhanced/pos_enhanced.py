@@ -35,6 +35,8 @@ _logger = logging.getLogger(__name__)
 class pos_customer_payment(models.Model):
     _name = 'pos.customer.payment'
     _order = 'id desc'
+    
+    #TODO - Make ta_pos_enhanced uninstallable if there are records in pos.customer.payment
         
     @api.one
     def unlink(self):
@@ -109,9 +111,6 @@ class res_partner(models.Model):
         compute='_get_balance',
         string='Balance', readonly=True,
         digits=dp.get_precision('Account'))
-  
-class point_of_sale(models.Model):
-    _name = 'pos.payment' 
 
 class pos_make_payment(osv.osv_memory):
     _inherit = 'pos.make.payment'
