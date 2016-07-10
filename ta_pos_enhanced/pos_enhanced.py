@@ -157,9 +157,11 @@ class pos_make_payment(osv.osv_memory):
         return self.launch_payment(cr, uid, ids, context=context)
 
         
-class point_of_sale(models.Model):
+class pos_order(models.Model):
     _inherit = 'pos.order'
     
+    custom_name = fields.Char(string='Invoice no', help = 'Custom order ref')
+      
     def create_picking(self, cr, uid, ids, context=None):
         """Create a picking for each order and validate it."""
         picking_obj = self.pool.get('stock.picking')
