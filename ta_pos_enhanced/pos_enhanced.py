@@ -176,7 +176,7 @@ class pos_order(models.Model):
                                                                              'pos.order.custom',
                                                                              context=context)
             if self.search(cr, uid, [('custom_name', '=', values['custom_name'])], context=context):
-                _logger.debug("order ref get next by code pos.order.custom code already exists in database")
+                _logger.error("order ref get next by code pos.order.custom code already exists in database")
             else:
                 break
         return super(pos_order, self).create(cr, uid, values, context=context)
