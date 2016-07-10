@@ -338,9 +338,8 @@ class pos_order(models.Model):
             return True
         else:
             return False   
-
+        
     def create_from_ui(self, cr, uid, orders, context=None):
-
         #TODO if payment is 0, then no need to add payment
         # Keep only new orders
         submitted_references = [o['data']['name'] for o in orders]
@@ -352,7 +351,6 @@ class pos_order(models.Model):
         order_ids = []
 
         for tmp_order in orders_to_save:
-            to_invoice = tmp_order['to_invoice']
             order = tmp_order['data']
             order_id = self._process_order(cr, uid, order, context=context)
             order_ids.append(order_id)
@@ -361,11 +359,10 @@ class pos_order(models.Model):
                 self.signal_workflow(cr, uid, [order_id], 'paid')
             except Exception as e:
                 _logger.error('Could not fully process the POS Order: %s', tools.ustr(e))
-                return []
+                return False
 
             current_order = self.browse(cr, uid, order_id, context)
-            
-            #Tahir
+        
             try:
                 self._create_account_move_line(cr, uid, order_id)
                 for st_line in current_order.statement_ids:
@@ -378,15 +375,11 @@ class pos_order(models.Model):
                     self.pool.get('account.bank.statement.line').process_reconciliation(cr, uid, st_line.id, [vals], context=context)
             except Exception as e:
                 _logger.error('Could not process payment for order: %s', tools.ustr(e))
-                return []
-
-            if to_invoice:
-                self.action_invoice(cr, uid, [order_id], context)
-                order_obj = self.browse(cr, uid, order_id, context)
-                self.pool['account.invoice'].signal_workflow(cr, uid, [order_obj.invoice_id.id], 'invoice_open')
+                return False
         
-        return order_ids
-    
+        current_order_name = current_order.custom_name
+        return current_order_name
+            
     def _process_order(self, cr, uid, order, context=None):
 
         order_id = self.create(cr, uid, self._order_fields(cr, uid, order, context=context),context)
