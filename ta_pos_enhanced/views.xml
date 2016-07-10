@@ -75,9 +75,39 @@
         <field name="model">pos.order</field>
 		<field name="inherit_id" ref="point_of_sale.view_pos_order_tree"/>
         <field name="arch" type="xml">
-	        <field name="name" position="before">
-	            <field name="custom_name"/>
-	        </field>
+            <xpath expr="//tree[@string='POS Orders']" position="replace">
+                <tree string="POS Orders" colors="blue:state == 'draft';gray:state in ('cancel');black:state not in('cancel')">
+                    <field name="custom_name"/>
+                    <field name="pos_reference"/>
+                    <field name="partner_id"/>
+                    <field name="date_order"/>
+                    <field name="user_id"/>
+                    <field name="amount_total" sum="Amount total"/>
+                    <field name="amount_paid" sum="Amount total"/>
+                    <field name="company_id" groups="base.group_multi_company"/>
+                    <field name="state"/>
+                </tree>
+            </xpath>
+        </field>
+    </record>
+	
+    <record model="ir.ui.view" id="view_pos_order_form_custom_name">
+        <field name="name">pos.order.form.custom.name</field>
+        <field name="model">pos.order</field>
+		<field name="inherit_id" ref="point_of_sale.view_pos_pos_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//group" position="replace">
+                <group col="4" colspan="4">
+                    <field name="custom_name"/>
+                    <field name="date_order"/>
+                    <field name="session_id" required="1"/>
+                    <field name="partner_id" on_change="onchange_partner_id(partner_id, context)" domain="[('customer', '=', True)]" context="{'search_default_customer':1}" attrs="{'readonly': [('state','=','invoiced')]}"/>
+                </group>
+            </xpath>
+			
+            <xpath expr="//group[@string='General Information']" position="inside">
+            	<field name="name"/>
+            </xpath>
 			
         </field>
     </record>
