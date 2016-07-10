@@ -75,7 +75,7 @@
         <field name="model">pos.order</field>
 		<field name="inherit_id" ref="point_of_sale.view_pos_order_tree"/>
         <field name="arch" type="xml">
-	        <field name="name" position="after">
+	        <field name="name" position="before">
 	            <field name="custom_name"/>
 	        </field>
 			
