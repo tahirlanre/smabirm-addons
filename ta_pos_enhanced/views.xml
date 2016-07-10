@@ -69,6 +69,18 @@
 			</xpath>
         </field>
     </record>
+	
+    <record model="ir.ui.view" id="view_pos_order_tree_custom_name">
+        <field name="name">pos.order.tree.custom.name</field>
+        <field name="model">pos.order</field>
+		<field name="inherit_id" ref="point_of_sale.view_pos_order_tree"/>
+        <field name="arch" type="xml">
+	        <field name="name" position="after">
+	            <field name="custom_name"/>
+	        </field>
+			
+        </field>
+    </record>
     
     <record id="view_pos_config_form" model="ir.ui.view">
             <field name="name">pos.config.form.view</field>

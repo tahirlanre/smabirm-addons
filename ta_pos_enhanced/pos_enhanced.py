@@ -160,8 +160,28 @@ class pos_make_payment(osv.osv_memory):
 class pos_order(models.Model):
     _inherit = 'pos.order'
     
-    custom_name = fields.Char(string='Invoice no', help = 'Custom order ref')
-      
+    custom_name = fields.Char(string='Invoice No', help = 'Custom order ref')
+    
+    def create(self, cr, uid, values, context=None):
+        if values.get('session_id'):
+            # set name based on the sequence specified on the config
+            session = self.pool['pos.session'].browse(cr, uid, values['session_id'], context=context)
+            values['name'] = session.config_id.sequence_id._next()
+        else:
+            # fallback on any pos.order sequence
+            values['name'] = self.pool.get('ir.sequence').get_id(cr, uid, 'pos.order', 'code', context=context)
+        
+        while True:
+            values['custom_name'] = self.pool.get('ir.sequence').next_by_code(cr,
+                                                                             uid,
+                                                                             'pos.order.custom',
+                                                                             context=context)
+            if self.search(cr, uid, [('custom_name', '=', values['custom_name'])], context=context):
+                _logger.debug("order ref get next by code pos.order.custom code already exists in database")
+            else:
+                break
+        return super(pos_order, self).create(cr, uid, values, context=context)
+    
     def create_picking(self, cr, uid, ids, context=None):
         """Create a picking for each order and validate it."""
         picking_obj = self.pool.get('stock.picking')
