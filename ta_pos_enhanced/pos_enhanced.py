@@ -36,8 +36,8 @@ class pos_customer_payment(models.Model):
     _name = 'pos.customer.payment'
     _order = 'id desc'
     
-    #TODO - Make ta_pos_enhanced uninstallable if there are records in pos.customer.payment
-        
+    # TODO Make ta_pos_enhanced uninstallable if there are records in pos.customer.payment
+    # TODO add field to reference pos.customer.payment in account.bank.statement.line
     @api.one
     def unlink(self):
         raise exceptions.Warning('Cannot delete customer payment(s)!')
