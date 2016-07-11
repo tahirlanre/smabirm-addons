@@ -10,7 +10,7 @@ openerp.ta_pos_enhanced = function(instance){
     var PosModelSuper = module.PosModel;
     var round_di = instance.web.round_decimals;
 
-//    module.PosModel = module.PosModel.extend({});
+	//module.PosModel = module.PosModel.extend({});
      /* Handle Button "Customer Payment" */
     var _saved_renderElement = module.PosWidget.prototype.renderElement;
     module.PosWidget.prototype.renderElement = function() {
@@ -135,8 +135,7 @@ openerp.ta_pos_enhanced = function(instance){
             });
             return pushed;
         },
-    });
-    
+    }); 
     module.PosWidget.include({
 
         build_widgets: function() {
@@ -176,7 +175,6 @@ openerp.ta_pos_enhanced = function(instance){
         
         
     });
-  
     module.CustomerReceiptScreenWidget = module.ScreenWidget.extend({
         template: 'CustomerReceiptScreenWidget',
 
@@ -395,7 +393,6 @@ openerp.ta_pos_enhanced = function(instance){
         }
 		
 	});
-	
     module.PaypadButtonWidget = module.PosBaseWidget.extend({
         template: 'PaypadButtonWidget',
         init: function(parent, options){
@@ -424,7 +421,6 @@ openerp.ta_pos_enhanced = function(instance){
             });
         },
     });
-    
     module.Order = module.Order.extend({
         
        initialize: function(attributes){
@@ -574,7 +570,6 @@ openerp.ta_pos_enhanced = function(instance){
         
         
     });
-    
     module.PaymentScreenWidget.include({
 		partner_balance: function(client){
 			var model = new instance.web.Model("res.partner");
@@ -797,8 +792,7 @@ openerp.ta_pos_enhanced = function(instance){
                 $("input").blur();
             },250);
         },
-    });
-    
+    }); 
     module.CustomerPaymentWidget = module.PopUpWidget.extend({
         template: 'CustomerPaymentWidget',
         

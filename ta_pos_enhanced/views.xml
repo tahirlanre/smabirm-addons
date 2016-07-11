@@ -15,7 +15,7 @@
       sequence="20"
       action="action_pos_payment" />
 	 
-	  <record id="view_pos_session_opening_default_user" model="ir.ui.view">
+	<record id="view_pos_session_opening_default_user" model="ir.ui.view">
 		  <field name="name">pos.session.opening.form.default.user.view</field>
 		  <field name="model">pos.session.opening</field>
 		  <field name="inherit_id" ref="point_of_sale.pos_session_opening_form_view"/>
@@ -31,7 +31,8 @@
 		  </field>
 	  	
 	  </record>
-    <record id="view_tree_pos_payment" model="ir.ui.view">
+    
+	<record id="view_tree_pos_payment" model="ir.ui.view">
         <field name="name">POS Payment Tree</field>
         <field name="model">pos.customer.payment</field>
         <field name="arch" type="xml">
