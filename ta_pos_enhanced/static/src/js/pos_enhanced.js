@@ -66,7 +66,7 @@ openerp.ta_pos_enhanced = function(instance){
             })
             return loaded;
         },
-		//function from pos_product_available
+		// function from pos_product_available addon
         refresh_qty_available:function(product){
             var $elem = $("[data-product-id='"+product.id+"'] .qty-tag");
             $elem.html(product.qty_available)
@@ -77,11 +77,6 @@ openerp.ta_pos_enhanced = function(instance){
         push_order_custom: function(order) {
             var self = this;
 			
-            //if(order){
-            //    this.proxy.log('push_order',order.export_as_JSON());
-            //    this.db.add_order(order.export_as_JSON());
-            //}
-           
             var pushed = new $.Deferred();
 			
             if(!order.get_client()){
@@ -156,7 +151,6 @@ openerp.ta_pos_enhanced = function(instance){
                     'scale':    this.scale_screen,
                     'receipt' : this.receipt_screen,
                     'clientlist': this.clientlist_screen,
-                    //'customer_payment': this.customer_payment_screen,
                     'customer_receipt': this.customer_receipt_screen,
                 },
                 popup_set:{
@@ -170,9 +164,7 @@ openerp.ta_pos_enhanced = function(instance){
                 default_screen: 'products',
                 default_mode: 'cashier',
             });
-        },
-        
-        
+        },    
     });
     module.CustomerReceiptScreenWidget = module.ScreenWidget.extend({
         template: 'CustomerReceiptScreenWidget',
@@ -228,7 +220,7 @@ openerp.ta_pos_enhanced = function(instance){
         },
         print_ticket: function(no){ 
 			if(this.pos.config.silent_printing){
-            	// Catch error in case addon is not present - Tahir
+            	// Catch error in case JSprintsetup addon is not found
             	try{
                     //Always use default printer.
                     var listOfPrinters = jsPrintSetup.getPrintersList();
@@ -336,7 +328,7 @@ openerp.ta_pos_enhanced = function(instance){
         },
         print_ticket: function(no){ 
 			if(this.pos.config.silent_printing){
-            	// Catch error in case addon is not present - Tahir
+            	// Catch error in case JSprintsetup addon is not found
             	try{
                     //Always use default printer.
                     var listOfPrinters = jsPrintSetup.getPrintersList();
@@ -434,7 +426,6 @@ openerp.ta_pos_enhanced = function(instance){
                 paymentLines:   new module.PaymentlineCollection(),
                 name:           _t("Order ") + this.uid,
                 client:         null,
-                laybyorder : null,
             });
             this.payment_amount = 0;
             this.selected_orderline   = undefined;
@@ -482,9 +473,9 @@ openerp.ta_pos_enhanced = function(instance){
         },
         getChange: function() {
             var self = this;
-            var ss = self.pos.pos_widget.screen_selector;
+            var ss = self.pos.pos_widget.screen_selector;  
             var change = this.getPaidTotal() - this.getTotalTaxIncluded();
-            if(change > 0 && ss.get_current_screen() !== 'customer_payment')
+            if(change > 0 && ss.get_current_screen() !== 'customer_payment') //FIXME why????
                 return change;
             return 0;
         },
@@ -754,7 +745,7 @@ openerp.ta_pos_enhanced = function(instance){
 	                                                   }));
 	                                                   self.pos.get('selectedOrder').destroy();    //finish order and go back to scan screen
 	                                                }else{
-	                                                	//FIXME: prevent duplicated orders
+	                                                	//FIXME: prevent duplicate orders
 														if(currentOrder.custom_name){
 	                                                		self.pos_widget.screen_selector.set_current_screen(self.next_screen);
 	                                                	}else{
@@ -871,6 +862,8 @@ openerp.ta_pos_enhanced = function(instance){
                 self.pos_widget.screen_selector.close_popup();
 			}
 		},
+		
+		// Deprecated - remove code in future upgrade
         payment_via_pos: function(){
 			var self = this;
             var currentOrder = this.pos.get('selectedOrder');
