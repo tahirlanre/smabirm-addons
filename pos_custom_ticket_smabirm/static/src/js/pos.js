@@ -31,7 +31,7 @@ openerp.pos_custom_ticket_smabirm = function(instance){
         refresh: function() {
             var order = this.pos.get('selectedOrder');
 			var customer = order.get_client();
-            var invoice_no = order.get_invoice_no();
+            var custom_name = order.get_custom_name();
 			var partner = '';
 			if(customer){
 				partner = customer;
@@ -40,7 +40,7 @@ openerp.pos_custom_ticket_smabirm = function(instance){
                     widget:this,
                     order: order,
 					partner : partner,
-                    invoice : invoice_no,
+                    custom_name : custom_name,
                     orderlines: order.get('orderLines').models,
                     paymentlines: order.get('paymentLines').models,
                 }));

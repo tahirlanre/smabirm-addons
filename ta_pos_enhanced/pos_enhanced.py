@@ -31,11 +31,13 @@ import openerp.addons.product.product
 import time
 
 _logger = logging.getLogger(__name__)
-            
+          
 class pos_customer_payment(models.Model):
     _name = 'pos.customer.payment'
     _order = 'id desc'
-        
+    
+    # TODO Make ta_pos_enhanced uninstallable if there are records in pos.customer.payment
+    
     @api.one
     def unlink(self):
         raise exceptions.Warning('Cannot delete customer payment(s)!')
@@ -52,6 +54,7 @@ class pos_customer_payment(models.Model):
 class pos_config(models.Model):
     _inherit = 'pos.config'
     
+    picking_type_id = fields.Many2one('stock.picking.type', required = True, string = 'Picking Type')   #Set Picking Type as a required field when configuring Point of Sale
     default_user = fields.Many2one('res.users', string = 'Default User')
     max_discount = fields.Float('Maximum Discount')
     discount_restriction = fields.Boolean('Discount Restriction')
@@ -108,9 +111,6 @@ class res_partner(models.Model):
         compute='_get_balance',
         string='Balance', readonly=True,
         digits=dp.get_precision('Account'))
-  
-class point_of_sale(models.Model):
-    _name = 'pos.payment' 
 
 class pos_make_payment(osv.osv_memory):
     _inherit = 'pos.make.payment'
@@ -158,23 +158,86 @@ class pos_make_payment(osv.osv_memory):
         
 class pos_order(models.Model):
     _inherit = 'pos.order'
+    
+    custom_name = fields.Char(string='Invoice No', required=True, readonly=True, copy=False, help = 'Custom order ref')
+    
+    def create(self, cr, uid, values, context=None):
+        
+        while True:
+            values['custom_name'] = self.pool.get('ir.sequence').next_by_code(cr,
+                                                                             uid,
+                                                                             'pos.order.custom',
+                                                                             context=context)
+            if self.search(cr, uid, [('custom_name', '=', values['custom_name'])], context=context):
+                _logger.error("order ref get next by code pos.order.custom code already exists in database")
+            else:
+                break
+        return super(pos_order, self).create(cr, uid, values, context=context)
+    
+    def create_picking(self, cr, uid, ids, context=None):
+        """Create a picking for each order and validate it."""
+        picking_obj = self.pool.get('stock.picking')
+        partner_obj = self.pool.get('res.partner')
+        move_obj = self.pool.get('stock.move')
 
+        for order in self.browse(cr, uid, ids, context=context):
+            addr = order.partner_id and partner_obj.address_get(cr, uid, [order.partner_id.id], ['delivery']) or {}
+            picking_type = order.picking_type_id
+            picking_id = False
+            if picking_type:
+                picking_id = picking_obj.create(cr, uid, {
+                    'origin': order.custom_name,            #change origin to custom_name
+                    'partner_id': addr.get('delivery',False),
+                    'date_done' : order.date_order,
+                    'picking_type_id': picking_type.id,
+                    'company_id': order.company_id.id,
+                    'move_type': 'direct',
+                    'note': order.note or "",
+                    'invoice_state': 'none',
+                }, context=context)
+                self.write(cr, uid, [order.id], {'picking_id': picking_id}, context=context)
+            location_id = order.location_id.id
+            if order.partner_id:
+                destination_id = order.partner_id.property_stock_customer.id
+            elif picking_type:
+                if not picking_type.default_location_dest_id:
+                    raise osv.except_osv(_('Error!'), _('Missing source or destination location for picking type %s. Please configure those fields and try again.' % (picking_type.name,)))
+                destination_id = picking_type.default_location_dest_id.id
+            else:
+                destination_id = partner_obj.default_get(cr, uid, ['property_stock_customer'], context=context)['property_stock_customer']
+
+            move_list = []
+            for line in order.lines:
+                if line.product_id and line.product_id.type == 'service':
+                    continue
+
+                move_list.append(move_obj.create(cr, uid, {
+                    'name': line.name,
+                    'product_uom': line.product_id.uom_id.id,
+                    'product_uos': line.product_id.uom_id.id,
+                    'picking_id': picking_id,
+                    'picking_type_id': picking_type.id, 
+                    'product_id': line.product_id.id,
+                    'product_uos_qty': abs(line.qty),
+                    'product_uom_qty': abs(line.qty),
+                    'state': 'draft',
+                    'location_id': location_id if line.qty >= 0 else destination_id,
+                    'location_dest_id': destination_id if line.qty >= 0 else location_id,
+                }, context=context))
+                
+            if picking_id:
+                picking_obj.action_confirm(cr, uid, [picking_id], context=context)
+                picking_obj.force_assign(cr, uid, [picking_id], context=context)
+                picking_obj.action_done(cr, uid, [picking_id], context=context)
+            elif move_list:
+                move_obj.action_confirm(cr, uid, move_list, context=context)
+                move_obj.force_assign(cr, uid, move_list, context=context)
+                move_obj.action_done(cr, uid, move_list, context=context)
+        return True
+        
     def check_connection(self, cr, uid, context=None):
         return True
     
-    def get_default_warehouse(self, cr, uid, context=None):
-        company_id = self.pool.get('res.users')._get_company(cr, uid, context=context)
-        warehouse_ids = self.pool.get('stock.warehouse').search(cr, uid, [('company_id', '=', company_id)], context=context)
-        if not warehouse_ids:
-            return False
-        return warehouse_ids[0]
-
-    def get_payment_term(self, cr, uid, context=None):
-        payment_term_id = self.pool.get('account.payment.term').search(cr, uid, [('name', '=', 'Layby')], context=context)
-        if payment_term_id:
-            return payment_term_id[0]
-        return False
-
     def get_default_company(self, cr, uid, context=None):
         company_id = self.pool.get('res.users').browse(cr, uid, uid, context=context).company_id.id
         if not company_id:
@@ -255,11 +318,13 @@ class pos_order(models.Model):
             return True
         else:
             return False   
-
+        
     def create_from_ui(self, cr, uid, orders, context=None):
-
-        #TODO if payment is 0, then no need to add payment
-        # Keep only new orders
+        ## overide method to:
+        # - to post order immediately
+        # - to post order payment immediately
+        # - to return custom_name
+        
         submitted_references = [o['data']['name'] for o in orders]
         existing_order_ids = self.search(cr, uid, [('pos_reference', 'in', submitted_references)], context=context)
         existing_orders = self.read(cr, uid, existing_order_ids, ['pos_reference'], context=context)
@@ -269,7 +334,6 @@ class pos_order(models.Model):
         order_ids = []
 
         for tmp_order in orders_to_save:
-            to_invoice = tmp_order['to_invoice']
             order = tmp_order['data']
             order_id = self._process_order(cr, uid, order, context=context)
             order_ids.append(order_id)
@@ -278,14 +342,13 @@ class pos_order(models.Model):
                 self.signal_workflow(cr, uid, [order_id], 'paid')
             except Exception as e:
                 _logger.error('Could not fully process the POS Order: %s', tools.ustr(e))
-                return []
+                return False
 
-            order_obj = self.browse(cr, uid, order_id, context)
-            
-            #Tahir
+            current_order = self.browse(cr, uid, order_id, context)
+        
             try:
                 self._create_account_move_line(cr, uid, order_id)
-                for st_line in order_obj.statement_ids:
+                for st_line in current_order.statement_ids:
                     vals = {
                             'debit': st_line.amount < 0 and -st_line.amount or 0.0,
                             'credit': st_line.amount > 0 and st_line.amount or 0.0,
@@ -295,21 +358,18 @@ class pos_order(models.Model):
                     self.pool.get('account.bank.statement.line').process_reconciliation(cr, uid, st_line.id, [vals], context=context)
             except Exception as e:
                 _logger.error('Could not process payment for order: %s', tools.ustr(e))
-                return []
-
-            if to_invoice:
-                self.action_invoice(cr, uid, [order_id], context)
-                #order_obj = self.browse(cr, uid, order_id, context)
-                self.pool['account.invoice'].signal_workflow(cr, uid, [order_obj.invoice_id.id], 'invoice_open')
-
-        return order_ids
-    
+                return False
+        
+        current_order_name = current_order.custom_name
+        return current_order_name
+            
     def _process_order(self, cr, uid, order, context=None):
 
         order_id = self.create(cr, uid, self._order_fields(cr, uid, order, context=context),context)
 
         for payments in order['statement_ids']:
             amount = payments[2]['amount']
+            ## add payment if amount is > 0
             if amount != 0:
                 self.add_payment(cr, uid, order_id, self._payment_fields(cr, uid, payments[2], context=context), context=context)
 
@@ -335,18 +395,14 @@ class pos_order(models.Model):
             }, context=context)
         return order_id
     
-    
-    #Tahir
-    #TODO - Refactor Code, add sufficient comments
     def pos_customer_payment(self, cr, uid, amount, statement_id, journal_id, partner_id, session_id, ref, context=None):
-        """Create a new payment for the order"""
+        """Create a new payment for customer"""
         context = dict(context or {})
         statement_line_obj = self.pool.get('account.bank.statement.line')
         property_obj = self.pool.get('ir.property')
         partner_obj = self.pool.get('res.partner')
         pos_session_obj = self.pool.get('pos.session')
         pos_customer_payment_obj = self.pool.get('pos.customer.payment')
-        #order = self.browse(cr, uid, order_id, context=context)
         partner = partner_obj.browse(cr, uid, partner_id, context=context)
         session = pos_session_obj.browse(cr, uid, session_id, context=context)
         args = {
@@ -356,13 +412,10 @@ class pos_order(models.Model):
             'partner_id': partner_id and self.pool.get("res.partner")._find_accounting_partner(partner).id or False,
         }
 
-        #journal_id = data.get('journal', False)
-        #statement_id = data.get('statement_id', False)
         assert journal_id or statement_id, "No statement_id or journal_id passed to the method!"
 
         journal = self.pool.get('account.journal').browse(cr, uid, journal_id, context=context)
-        #print journal.company_id
-        #print context
+        
         #use the company of the journal and not of the current user
         company_cxt = dict(context, force_company=journal.company_id.id)
         account_def = property_obj.get(cr, uid, 'property_account_receivable', 'res.partner', context=company_cxt)
@@ -391,7 +444,6 @@ class pos_order(models.Model):
 
         args.update({
             'statement_id': statement_id,
-            #'pos_statement_id': order_id,
             'journal_id': journal_id,
             'ref': session.name,
         })
@@ -421,8 +473,6 @@ class pos_order(models.Model):
             return 
                
         return pos_p.id
-
-        #return statement_id
         
     def customer_payment_via_pos(self, cr, uid, partner_id, journal_id, amount, context=None):
         if context is None:
@@ -728,6 +778,8 @@ class pos_order(models.Model):
                 all_lines.append((0, 0, value),)
         if move_id: #In case no order was changed
             self.pool.get("account.move").write(cr, uid, [move_id], {'line_id':all_lines}, context=context)
-            self.pool.get('account.move').post(cr, uid, [move_id], context=context) #Tahir
+            #post pos sales account moves
+            self.pool.get('account.move').post(cr, uid, [move_id], context=context)  
 
         return True
+        

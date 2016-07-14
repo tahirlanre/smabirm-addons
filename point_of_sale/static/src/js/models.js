@@ -599,14 +599,11 @@ function openerp_pos_models(instance, module){ //module is instance.point_of_sal
 
             // we try to send the order. shadow prevents a spinner if it takes too long. (unless we are sending an invoice,
             // then we want to notify the user that we are waiting on something )
-            //console.log(orders);
             var posOrderModel = new instance.web.Model('pos.order');
             return posOrderModel.call('create_from_ui',
                 [_.map(orders, function (order) {
-                   //console.log(order)
                     order.to_invoice = options.to_invoice || false;
                     return order;
-                    //console.log(order);
                 })],
                 undefined,
                 {
@@ -617,7 +614,6 @@ function openerp_pos_models(instance, module){ //module is instance.point_of_sal
                 _.each(orders, function (order) {
                     self.db.remove_order(order.id);
                 });
-                //console.log(server_ids);
                 return server_ids;
             }).fail(function (error, event){
                 if(error.code === 200 ){    // Business Logic Error, not a connection problem

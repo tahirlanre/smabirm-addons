@@ -10,7 +10,7 @@ openerp.ta_pos_enhanced = function(instance){
     var PosModelSuper = module.PosModel;
     var round_di = instance.web.round_decimals;
 
-//    module.PosModel = module.PosModel.extend({});
+	//module.PosModel = module.PosModel.extend({});
      /* Handle Button "Customer Payment" */
     var _saved_renderElement = module.PosWidget.prototype.renderElement;
     module.PosWidget.prototype.renderElement = function() {
@@ -22,22 +22,20 @@ openerp.ta_pos_enhanced = function(instance){
                 
                 var ss = self.pos.pos_widget.screen_selector;
                 if(ss.get_current_screen() === 'receipt'){
-                    console.warn('TODO should not get there...?');
+                    console.warn('should not get there...?');
                     return;
                 }
                 
                 if(ss.get_current_screen() === 'customer_receipt'){
-                    console.warn('TODO should not get there...?');
+                    console.warn('should not get there...?');
                     return;
                 }
                     
                 self.pos_widget.screen_selector.show_popup('customer-payment-popup');
-               //self.pos_widget.screen_selector.set_current_screen('customer_payment');
             });
 
     },
     module.PosModel = module.PosModel.extend({
-        
         load_server_data: function(){
             var self = this;
             var loaded = PosModelSuper.prototype.load_server_data.call(this);
@@ -68,6 +66,7 @@ openerp.ta_pos_enhanced = function(instance){
             })
             return loaded;
         },
+		//function from pos_product_available
         refresh_qty_available:function(product){
             var $elem = $("[data-product-id='"+product.id+"'] .qty-tag");
             $elem.html(product.qty_available)
@@ -75,95 +74,67 @@ openerp.ta_pos_enhanced = function(instance){
                 $elem.addClass('not-available')
             }
         },
-        push_order: function(order){
+        push_order_custom: function(order) {
             var self = this;
-            var pushed = PosModelSuper.prototype.push_order.call(this, order);
-            var client = order && order.get_client();
-            var ss = self.pos_widget.screen_selector;
-            var currentScreen = ss.get_current_screen();
-            var order = self.get('selectedOrder');
-            var bal = order.getPaidTotal() - order.getTotalTaxIncluded();
-			//console.log('push_order', order.export_as_JSON());
-            if (order){
-                order.get('orderLines').each(function(line){
-                    var product = line.get_product();
-                    product.qty_available -= line.get_quantity();
-                    self.refresh_qty_available(product);
-                })
-            }
-            if (client){
-                if(order.get_balance()){
-                    client.balance -= bal;
-                    return;
-                }
-                if(bal && (currentScreen == 'customer_payment')){
-                    client.balance -= bal;
-                    return;
-                }
-            }
-            return pushed;
-        },
-        push_and_invoice_order: function(order){
-            var self = this;
-            var invoiced = new $.Deferred(); 
-
-            if(!order.get_client()){
-                invoiced.reject('error-no-client');
-                return invoiced;
-            }
-			//console.log('push_and_invoice_order', order.export_as_JSON());
-            var order_id = this.db.add_order(order.export_as_JSON());
+			
+            //if(order){
+            //    this.proxy.log('push_order',order.export_as_JSON());
+            //    this.db.add_order(order.export_as_JSON());
+            //}
            
-            this.flush_mutex.exec(function(){
-                var done = new $.Deferred(); // holds the mutex
+            var pushed = new $.Deferred();
+			
+            if(!order.get_client()){
+                pushed.reject('error-no-client');
+                return pushed;
+            }
+			var order_id = this.db.add_order(order.export_as_JSON());
 
+            this.flush_mutex.exec(function(){
+				var done = new $.Deferred(); // holds the mutex
+				
                 // send the order to the server
                 // we have a 30 seconds timeout on this push.
                 // FIXME: if the server takes more than 30 seconds to accept the order,
                 // the client will believe it wasn't successfully sent, and very bad
                 // things will happen as a duplicate will be sent next time
                 // so we must make sure the server detects and ignores duplicated orders
-
-                var transfer = self._flush_orders([self.db.get_order(order_id)], {timeout:30000, to_invoice:false});
-                
+				
+				var transfer = self._flush_orders([self.db.get_order(order_id)], {timeout:30000});
+				
                 transfer.fail(function(){
-                    invoiced.reject('error-transfer');
+                    pushed.reject('error-transfer');
                     done.reject();
                 });
-
-                // on success, get the order id generated by the server
-                transfer.pipe(function(order_server_id){    
-
-                    // generate the pdf and download it
-                    //self.pos_widget.do_action('point_of_sale.pos_lines_report',{additional_context:{ 
-                     //   active_ids:order_server_id,
-                    //}});
-                    //self.pos_widget.screen_selector.set_current_screen('receipt')
-                    order.invoice_no = order_server_id[0];
-                    invoiced.resolve();
+				
+                // on success, get the order name generated by the server
+                transfer.pipe(function(order_name){    
+                    order.custom_name = order_name;
+                    pushed.resolve();
                     done.resolve();
                 });
                 
+				// update customer balance in POS interface
                 var bal = order.getPaidTotal() - order.getTotalTaxIncluded();
                 var client = order && order.get_client();
-            
                 if(order.get_balance()){
                     client.balance -= bal;
                     //return;
                 }
+				
+				// update product quantity in POS interface
 	            if (order){
 	                order.get('orderLines').each(function(line){
 	                    var product = line.get_product();
 	                    product.qty_available -= line.get_quantity();
-	                    self.refresh_qty_available(product);
+	                    self.refresh_qty_available(product); 
 	                })
 	            }
                 return done;
             });
-            return invoiced;
+            return pushed;
         },
-    });
-    
+    }); 
     module.PosWidget.include({
 
         build_widgets: function() {
@@ -203,7 +174,6 @@ openerp.ta_pos_enhanced = function(instance){
         
         
     });
-  
     module.CustomerReceiptScreenWidget = module.ScreenWidget.extend({
         template: 'CustomerReceiptScreenWidget',
 
@@ -422,7 +392,6 @@ openerp.ta_pos_enhanced = function(instance){
         }
 		
 	});
-	
     module.PaypadButtonWidget = module.PosBaseWidget.extend({
         template: 'PaypadButtonWidget',
         init: function(parent, options){
@@ -434,24 +403,21 @@ openerp.ta_pos_enhanced = function(instance){
             this._super();
 
             this.$el.click(function(){
-                if (self.pos.get('selectedOrder').get('screen') === 'receipt'){  //TODO Why ?
-                    console.warn('TODO should not get there...?');
+                if (self.pos.get('selectedOrder').get('screen') === 'receipt'){  //Why ?
+                    console.warn('should not get there...?');
                     return;
                 }
                 var ss = self.pos_widget.screen_selector;
                 if(ss.get_current_screen() === 'customer_payment'){
                     self.pos.get('selectedOrder').addPaymentline(self.cashregister);
                     self.pos_widget.screen_selector.set_current_screen('customer_payment');
-                    //console.log('Customer Payment');
                 }else{
                     self.pos.get('selectedOrder').addPaymentline(self.cashregister);
-                    self.pos_widget.screen_selector.set_current_screen('payment');
-                    //console.log('Payment');  
+                    self.pos_widget.screen_selector.set_current_screen('payment'); 
                 }
             });
         },
     });
-    
     module.Order = module.Order.extend({
         
        initialize: function(attributes){
@@ -459,7 +425,7 @@ openerp.ta_pos_enhanced = function(instance){
             this.pos = attributes.pos;
             this.sequence_number = this.pos.pos_session.sequence_number++;
             this.uid =     this.generateUniqueId();
-            this.invoice_no = undefined;
+            this.custom_name = undefined;
             this.payment_no = undefined;
             this.payment_detail = undefined;
             this.set({
@@ -508,8 +474,8 @@ openerp.ta_pos_enhanced = function(instance){
         get_payment_detail: function(){
             return this.payment_detail;
         },
-        get_invoice_no: function(){
-            return this.invoice_no;
+        get_custom_name: function(){
+            return this.custom_name;
         },
         get_payment_no: function(){
             return this.payment_no;
@@ -601,7 +567,6 @@ openerp.ta_pos_enhanced = function(instance){
         
         
     });
-    
     module.PaymentScreenWidget.include({
 		partner_balance: function(client){
 			var model = new instance.web.Model("res.partner");
@@ -640,14 +605,13 @@ openerp.ta_pos_enhanced = function(instance){
         },
         validate_order: function(options) {
             var self = this;
-
-            options = {invoice: true};
-
+			
+			options = options || {};
+			
             var currentOrder = self.pos.get('selectedOrder');
             var currentOrderLines = this.pos.get('selectedOrder').get('orderLines');
             var item_count = 0;
 			var client = currentOrder.get_client();
-			
 			
             if (currentOrderLines.length > 0) {
                 new instance.web.Model("pos.order").get_func("check_connection")().done(function(connection) {
@@ -695,7 +659,7 @@ openerp.ta_pos_enhanced = function(instance){
                                                         return;
                                                     }
                                                 }
-												//debugger;
+												
 												if(client && currentOrder.get_balance()){
 													if(client.credit_limit_restriction){
 														var total_pay = 0;
@@ -757,55 +721,48 @@ openerp.ta_pos_enhanced = function(instance){
                                                 if (self.pos.config.iface_cashdrawer) {
                                                     self.pos.proxy.open_cashbox();
                                                 }
+													
+                                                // deactivate the validation button while we try to send the order
+                                                self.pos_widget.action_bar.set_button_disabled('validation',true);
+                                                self.pos_widget.action_bar.set_button_disabled('invoice',true);
+													
+                                                var pushed = self.pos.push_order_custom(currentOrder);
+													
+                                                pushed.fail(function(error){
+                                                	if(error === 'error-no-client'){
+                                                		self.pos_widget.screen_selector.show_popup('error',{
+                                                    		message: _t('An anonymous order cannot be invoiced'),
+                                                        	comment: _t('Please select a client for this order. This can be done by clicking the order tab'),
+                                                   	 	});
+                                                 	}else{
+                                                    	self.pos_widget.screen_selector.show_popup('error',{
+                                                        	message: _t('The order could not be sent'),
+                                                        	comment: _t('Check your internet connection and try again.'),
+                                                     	});
+                                                 	}
+                                                    self.pos_widget.action_bar.set_button_disabled('validation',false);
+                                                    self.pos_widget.action_bar.set_button_disabled('invoice',false);
+                                                 });
                                     
-                                                if(options.invoice){
-                                                    // deactivate the validation button while we try to send the order
-                                                    self.pos_widget.action_bar.set_button_disabled('validation',true);
-                                                    self.pos_widget.action_bar.set_button_disabled('invoice',true);
-                                    
-                                                    var invoiced = self.pos.push_and_invoice_order(currentOrder);
-                                                    //console.log(currentOrder)
-                                    
-                                                    invoiced.fail(function(error){
-                                                        if(error === 'error-no-client'){
-                                                            self.pos_widget.screen_selector.show_popup('error',{
-                                                                message: _t('An anonymous order cannot be invoiced'),
-                                                                comment: _t('Please select a client for this order. This can be done by clicking the order tab'),
-                                                            });
-                                                        }else{
-                                                            self.pos_widget.screen_selector.show_popup('error',{
-                                                                message: _t('The order could not be sent'),
-                                                                comment: _t('Check your internet connection and try again.'),
-                                                            });
-                                                        }
-                                                        self.pos_widget.action_bar.set_button_disabled('validation',false);
-                                                        self.pos_widget.action_bar.set_button_disabled('invoice',false);
-                                                    });
-                                    
-                                                    invoiced.done(function(){
-                                                        self.pos_widget.action_bar.set_button_disabled('validation',false);
-                                                        self.pos_widget.action_bar.set_button_disabled('invoice',false);
-														if(currentOrder.invoice_no){
-                                                             self.pos_widget.screen_selector.set_current_screen(self.next_screen);
-                                                        }else{
-                                                            alert("Could not process invoice, please refresh and start again");
-                                                        }
-                                                    });
-                                    
-                                                }else{
-                                                    //var self = this;
-                                                    self.pos.push_order(currentOrder);
-                                                    if(self.pos.config.iface_print_via_proxy){
-                                                        var receipt = currentOrder.export_for_printing();
-                                                        self.pos.proxy.print_receipt(QWeb.render('XmlReceipt',{
-                                                            receipt: receipt, widget: self,
-                                                        }));
-                                                        self.pos.get('selectedOrder').destroy();    //finish order and go back to scan screen
-                                                    }else{
-                                                        self.pos_widget.screen_selector.set_current_screen(self.next_screen);
-                                                    }
+                                                 pushed.done(function(){
+                                                    self.pos_widget.action_bar.set_button_disabled('validation',false);
+                                                    self.pos_widget.action_bar.set_button_disabled('invoice',false);
+	                                                if(self.pos.config.iface_print_via_proxy){
+	                                         		   var receipt = currentOrder.export_for_printing();
+	                                                   self.pos.proxy.print_receipt(QWeb.render('XmlReceipt',{
+	                                                   		receipt: receipt, widget: self,
+	                                                   }));
+	                                                   self.pos.get('selectedOrder').destroy();    //finish order and go back to scan screen
+	                                                }else{
+	                                                	//FIXME: prevent duplicated orders
+														if(currentOrder.custom_name){
+	                                                		self.pos_widget.screen_selector.set_current_screen(self.next_screen);
+	                                                	}else{
+	                                                    	alert("Could not process invoice, please refresh and start again");
+	                                                	}
+	                                              	}
+                                                 });
                                                 }
-                                            }
                                             flag = false;
                                         }
                                     }
@@ -832,8 +789,7 @@ openerp.ta_pos_enhanced = function(instance){
                 $("input").blur();
             },250);
         },
-    });
-    
+    }); 
     module.CustomerPaymentWidget = module.PopUpWidget.extend({
         template: 'CustomerPaymentWidget',
         

@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<openerp>
+    <data noupdate="1">
+
+        <!-- Sequences for custom order ref -->
+        <record id="seq_type_custom_order_name" model="ir.sequence.type">
+            <field name="name">Custom POS order name</field>
+            <field name="code">pos.order.custom</field>
+        </record> 
+
+        <record id="seq_custom_pos_order_name" model="ir.sequence">
+            <field name="name">Custom Order Ref</field>
+            <field name="code">pos.order.custom</field>
+           <!-- <field name="prefix"></field>
+            <field name="padding"></field>-->
+            <field name="company_id" eval="False"/>
+        </record>
+
+    </data>
+</openerp>

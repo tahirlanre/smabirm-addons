@@ -139,10 +139,9 @@ class pos_details_custom(pos_details):
     def _paid_total_2(self):
         return self.total_paid or 0.0
 
-
+    
     def _get_payments(self, form):
         statement_line_obj = self.pool.get("account.bank.statement.line")
-        account_voucher_obj = self.pool.get("account.voucher")
         pos_order_obj = self.pool.get("pos.order")
         user_ids = form['user_ids'] or self._get_all_users()
         company_id = self.pool['res.users'].browse(self.cr, self.uid, self.uid).company_id.id
@@ -150,15 +149,14 @@ class pos_details_custom(pos_details):
         data={}
         if pos_ids:
             st_line_ids = statement_line_obj.search(self.cr, self.uid, [('pos_statement_id', 'in', pos_ids)])
-
             if st_line_ids:
                 st_id = statement_line_obj.browse(self.cr, self.uid, st_line_ids)
                 a_l=[]
                 for r in st_id:
                     a_l.append(r['id'])
                 self.cr.execute("select a.id, a.name, sum(sum) from (select aj.id,aj.name, sum(amount) from account_bank_statement_line as absl,account_bank_statement as abs,account_journal as aj "\
-                                "where absl.statement_id = abs.id and abs.journal_id = aj.id  and aj.name != 'Discount Journal' and absl.date >= '%s' and absl.date <= '%s'"\
-                                "group by aj.id, aj.name union all select aj.id , aj.name, sum(amount) from pos_customer_payment as pos, account_journal as aj where payment_date >= '%s' and payment_date <= '%s' and aj.name != 'Discount Journal' and aj.id = pos.journal_id group by aj.id, aj.name) a group by a.id, a.name"%(form['date_start'],form['date_end'],form['date_start'],form['date_end']))
+                                "where absl.statement_id = abs.id and abs.journal_id = aj.id and absl.id IN %s and aj.name != 'Discount Journal' "\
+                                "group by aj.id, aj.name union all select aj.id , aj.name, sum(amount) from pos_customer_payment as pos, account_journal as aj where payment_date >= %s and payment_date <= %s and aj.name != 'Discount Journal' and aj.id = pos.journal_id group by aj.id, aj.name) a group by a.id, a.name",(tuple(a_l),form['date_start'],form['date_end'],))
                 data = self.cr.dictfetchall()
                 for a in data:
                     self.total_paid+=a['sum']
@@ -166,6 +164,14 @@ class pos_details_custom(pos_details):
             else:
                 return {}
         else:
+            pos_payment_obj = self.pool.get("pos.customer.payment")
+            pay_ids = pos_payment_obj.search(self.cr, self.uid, [('payment_date', '>=', form['date_start']), ('payment_date','<=', form['date_end'])])
+            if pay_ids:
+                self.cr.execute("select aj.id , aj.name, sum(amount) from pos_customer_payment as pos, account_journal as aj where payment_date >= '%s' and payment_date <= '%s' and aj.name != 'Discount Journal' and aj.id = pos.journal_id group by aj.id, aj.name" %(form['date_start'],form['date_end']))
+                data = self.cr.dictfetchall()
+                for a in data:
+                    self.total_paid+=a['sum']
+                return data
             return {}
 
 

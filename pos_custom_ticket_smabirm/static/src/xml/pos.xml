@@ -17,7 +17,7 @@
 				<div class="pos-center-receipt-address">Phone: 08038426365, 08065749605, 08033145279, 08037411979</div>
 			<br />
             <table>
-				<div class ="pos-center-receipt-heading">SALES INVOICE <t t-esc="invoice"/></div>
+				<div class ="pos-center-receipt-heading">SALES INVOICE <t t-esc="custom_name"/></div>
             </table>
 	
 				<br />
