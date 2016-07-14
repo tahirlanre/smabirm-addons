@@ -21,7 +21,7 @@
 
 {
     'name': 'Enhanced POS for Smabirm',
-    'version': '1.0.0',
+    'version': '1.1',
     'category': 'Point Of Sale',
     'sequence': 6,
     'summary': '',

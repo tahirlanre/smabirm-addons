@@ -316,12 +316,14 @@ class pos_order(models.Model):
     def check_connection(self, cr, uid, context=None):
         return True
     
+    ## Deprecated - remove code in future upgrade
     def get_default_company(self, cr, uid, context=None):
         company_id = self.pool.get('res.users').browse(cr, uid, uid, context=context).company_id.id
         if not company_id:
             raise osv.except_osv(_('Error!'), _('There is no default company for the current user\'s company!'))
         return company_id
     
+    ## Deprecated - remove code in future upgrade
     def get_account_id(self, cr, uid, journal, partner_id, context=None):
         partner_pool = self.pool.get('res.partner')
         journal_pool = self.pool.get('account.journal')
@@ -338,6 +340,7 @@ class pos_order(models.Model):
             account_id = journal.default_credit_account_id.id or journal.default_debit_account_id.id
         return account_id
     
+    ## Deprecated - remove code in future upgrade
     def _account_voucher_fields(self, cr, uid, payment_info, journal_id, amount, context=None):
         journal_pool = self.pool.get('account.journal')
         invoice_obj = self.pool.get('account.invoice')
@@ -356,7 +359,8 @@ class pos_order(models.Model):
                 vals[key].update(res[key])
         vals['value']['journal_id'] = journal_id
         return vals
-
+    
+    ## Deprecated - remove code in future upgrade
     def payment_invoice_via_pos(self, cr, uid, payment_info, journal_id, amount, context=None):
         if context is None:
             ctx = {}
@@ -473,7 +477,7 @@ class pos_order(models.Model):
             }, context=context)
         return order_id
     
-      
+    ## Deprecated - remove code in future upgrade 
     def customer_payment_via_pos(self, cr, uid, partner_id, journal_id, amount, context=None):
         if context is None:
             ctx = {}
@@ -501,7 +505,6 @@ class pos_order(models.Model):
         except Exception as e:
                 _logger.error('Wahala dey small: %s', tools.ustr(e)) 
                 
-        
         if amount != 0:
             try:
                 vals = self._account_voucher_fields_1(cr, uid, partner_id, journal_id, amount, context=ctx)
@@ -534,6 +537,7 @@ class pos_order(models.Model):
         else:
             return    
     
+    ## Deprecated - remove code in future upgrade
     def _account_voucher_fields_1(self, cr, uid, customer_id, journal_id, amount, context=None):
         try:
             journal_pool = self.pool.get('account.journal')
