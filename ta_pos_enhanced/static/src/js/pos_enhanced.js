@@ -801,7 +801,9 @@ openerp.ta_pos_enhanced = function(instance){
             var self = this;
             this._super();
             this.renderElement();
-			//console.log('cash', this.cashregisters);
+			/*
+				TODO disable button once clicked
+			*/
             this.$('.footer #accept').off('click').click(function () {
                 if (confirm("Are you sure you want to pay this?") == true) {
                     self.customer_payment_via_pos();
@@ -850,7 +852,7 @@ openerp.ta_pos_enhanced = function(instance){
 			if(client){
                 partner_id = client.id;
                 if(amount){
-                   new instance.web.Model('pos.order').call('pos_customer_payment',[amount, statement_id, journal_id, partner_id, pos_session_id, ref]).then(function(result){
+                   new instance.web.Model('pos.customer.payment').call('pos_customer_payment',[amount, statement_id, journal_id, partner_id, pos_session_id, ref]).then(function(result){
                    if(result){
                    		currentOrder.payment_no = result;
                    	 	client.balance -=amount;

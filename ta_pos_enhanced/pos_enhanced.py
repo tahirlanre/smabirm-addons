@@ -43,7 +43,85 @@ class pos_customer_payment(models.Model):
         raise exceptions.Warning('Cannot delete customer payment(s)!')
         return True
     
-    #def create(self, test, context = context)
+    def pos_customer_payment(self, cr, uid, amount, statement_id, journal_id, partner_id, session_id, ref, context=None):
+        """Create a new payment for customer"""
+        context = dict(context or {})
+        statement_line_obj = self.pool.get('account.bank.statement.line')
+        property_obj = self.pool.get('ir.property')
+        partner_obj = self.pool.get('res.partner')
+        pos_session_obj = self.pool.get('pos.session')
+        pos_customer_payment_obj = self.pool.get('pos.customer.payment')
+        partner = partner_obj.browse(cr, uid, partner_id, context=context)
+        session = pos_session_obj.browse(cr, uid, session_id, context=context)
+        args = {
+            'amount': amount,
+            'date': time.strftime('%Y-%m-%d'),
+            'name': 'Payment: ' + ref,
+            'partner_id': partner_id and self.pool.get("res.partner")._find_accounting_partner(partner).id or False,
+        }
+
+        assert journal_id or statement_id, "No statement_id or journal_id passed to the method!"
+
+        journal = self.pool.get('account.journal').browse(cr, uid, journal_id, context=context)
+        
+        #use the company of the journal and not of the current user
+        company_cxt = dict(context, force_company=journal.company_id.id)
+        account_def = property_obj.get(cr, uid, 'property_account_receivable', 'res.partner', context=company_cxt)
+        args['account_id'] = (partner and partner.property_account_receivable \
+                             and partner.property_account_receivable.id) or (account_def and account_def.id) or False
+
+        if not args['account_id']:
+            if not partner_id:
+                msg = _('There is no receivable account defined to make payment.')
+            else:
+                msg = _('There is no receivable account defined to make payment for the partner: "%s" (id:%d).') % (partner.name, partner.id,)
+            raise osv.except_osv(_('Configuration Error!'), msg)
+
+        context.pop('pos_session_id', False)
+
+        for statement in session.statement_ids:
+            if statement.id == statement_id:
+                journal_id = statement.journal_id.id
+                break
+            elif statement.journal_id.id == journal_id:
+                statement_id = statement.id
+                break
+
+        if not statement_id:
+            raise osv.except_osv(_('Error!'), _('You have to open at least one cashbox.'))
+
+        args.update({
+            'statement_id': statement_id,
+            'journal_id': journal_id,
+            'ref': session.name,
+        })
+        try:
+            st_line_id = statement_line_obj.create(cr, uid, args, context=context)
+            st_line = statement_line_obj.browse(cr, uid, st_line_id, context=context)
+            #for st_line in statement_line_obj.ids:
+            vals = {
+                    'debit': st_line.amount < 0 and -st_line.amount or 0.0,
+                    'credit': st_line.amount > 0 and st_line.amount or 0.0,
+                    'account_id': st_line.account_id.id,
+                    'name': st_line.name
+                }
+            statement_line_obj.process_reconciliation(cr, uid, st_line.id, [vals], context=context)
+            pos_customer_payment= {
+                'amount': amount,
+                'journal_id' : journal_id,
+                'payment_name' : ref,
+                'payment_date': time.strftime('%Y-%m-%d'),
+                'partner_id': partner_id and self.pool.get("res.partner")._find_accounting_partner(partner).id or False, 
+                'pos_payment_statement_id': st_line.id,   
+            }
+            payment = pos_customer_payment_obj.create(cr, uid, pos_customer_payment, context = context)
+            pos_p = pos_customer_payment_obj.browse(cr, uid, payment, context=context)
+        except Exception as e:
+            _logger.error('Could not process customer payment: %s', tools.ustr(e))
+            return 
+               
+        return pos_p.id
+    
     pos_payment_statement_id = fields.Many2one('account.bank.statement.line', 'Statement Line')
     journal_id = fields.Many2one('account.journal', 'Payment Method')
     amount = fields.Float('Amount')
@@ -395,85 +473,7 @@ class pos_order(models.Model):
             }, context=context)
         return order_id
     
-    def pos_customer_payment(self, cr, uid, amount, statement_id, journal_id, partner_id, session_id, ref, context=None):
-        """Create a new payment for customer"""
-        context = dict(context or {})
-        statement_line_obj = self.pool.get('account.bank.statement.line')
-        property_obj = self.pool.get('ir.property')
-        partner_obj = self.pool.get('res.partner')
-        pos_session_obj = self.pool.get('pos.session')
-        pos_customer_payment_obj = self.pool.get('pos.customer.payment')
-        partner = partner_obj.browse(cr, uid, partner_id, context=context)
-        session = pos_session_obj.browse(cr, uid, session_id, context=context)
-        args = {
-            'amount': amount,
-            'date': time.strftime('%Y-%m-%d'),
-            'name': ref,
-            'partner_id': partner_id and self.pool.get("res.partner")._find_accounting_partner(partner).id or False,
-        }
-
-        assert journal_id or statement_id, "No statement_id or journal_id passed to the method!"
-
-        journal = self.pool.get('account.journal').browse(cr, uid, journal_id, context=context)
-        
-        #use the company of the journal and not of the current user
-        company_cxt = dict(context, force_company=journal.company_id.id)
-        account_def = property_obj.get(cr, uid, 'property_account_receivable', 'res.partner', context=company_cxt)
-        args['account_id'] = (partner and partner.property_account_receivable \
-                             and partner.property_account_receivable.id) or (account_def and account_def.id) or False
-
-        if not args['account_id']:
-            if not partner_id:
-                msg = _('There is no receivable account defined to make payment.')
-            else:
-                msg = _('There is no receivable account defined to make payment for the partner: "%s" (id:%d).') % (partner.name, partner.id,)
-            raise osv.except_osv(_('Configuration Error!'), msg)
-
-        context.pop('pos_session_id', False)
-
-        for statement in session.statement_ids:
-            if statement.id == statement_id:
-                journal_id = statement.journal_id.id
-                break
-            elif statement.journal_id.id == journal_id:
-                statement_id = statement.id
-                break
-
-        if not statement_id:
-            raise osv.except_osv(_('Error!'), _('You have to open at least one cashbox.'))
-
-        args.update({
-            'statement_id': statement_id,
-            'journal_id': journal_id,
-            'ref': session.name,
-        })
-        try:
-            st_line_id = statement_line_obj.create(cr, uid, args, context=context)
-            st_line = statement_line_obj.browse(cr, uid, st_line_id, context=context)
-            #for st_line in statement_line_obj.ids:
-            vals = {
-                    'debit': st_line.amount < 0 and -st_line.amount or 0.0,
-                    'credit': st_line.amount > 0 and st_line.amount or 0.0,
-                    'account_id': st_line.account_id.id,
-                    'name': st_line.name
-                }
-            self.pool.get('account.bank.statement.line').process_reconciliation(cr, uid, st_line.id, [vals], context=context)
-            pos_customer_payment= {
-                'amount': amount,
-                'journal_id' : journal_id,
-                'payment_name' : ref,
-                'payment_date': time.strftime('%Y-%m-%d'),
-                'partner_id': partner_id and self.pool.get("res.partner")._find_accounting_partner(partner).id or False, 
-                'pos_payment_statement_id': st_line.id,   
-            }
-            payment = pos_customer_payment_obj.create(cr, uid, pos_customer_payment, context = context)
-            pos_p = pos_customer_payment_obj.browse(cr, uid, payment, context=context)
-        except Exception as e:
-            _logger.error('Could not process customer payment: %s', tools.ustr(e))
-            return 
-               
-        return pos_p.id
-        
+      
     def customer_payment_via_pos(self, cr, uid, partner_id, journal_id, amount, context=None):
         if context is None:
             ctx = {}
