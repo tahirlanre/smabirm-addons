@@ -37,7 +37,7 @@ class pos_customer_payment(models.Model):
     _order = 'id desc'
     
     # TODO Make ta_pos_enhanced uninstallable if there are records in pos.customer.payment
-    # TODO add field to reference pos.customer.payment in account.bank.statement.line
+    
     @api.one
     def unlink(self):
         raise exceptions.Warning('Cannot delete customer payment(s)!')
@@ -162,13 +162,6 @@ class pos_order(models.Model):
     custom_name = fields.Char(string='Invoice No', required=True, readonly=True, copy=False, help = 'Custom order ref')
     
     def create(self, cr, uid, values, context=None):
-        if values.get('session_id'):
-            # set name based on the sequence specified on the config
-            session = self.pool['pos.session'].browse(cr, uid, values['session_id'], context=context)
-            values['name'] = session.config_id.sequence_id._next()
-        else:
-            # fallback on any pos.order sequence
-            values['name'] = self.pool.get('ir.sequence').get_id(cr, uid, 'pos.order', 'code', context=context)
         
         while True:
             values['custom_name'] = self.pool.get('ir.sequence').next_by_code(cr,
@@ -193,7 +186,7 @@ class pos_order(models.Model):
             picking_id = False
             if picking_type:
                 picking_id = picking_obj.create(cr, uid, {
-                    'origin': order.custom_name,
+                    'origin': order.custom_name,            #change origin to custom_name
                     'partner_id': addr.get('delivery',False),
                     'date_done' : order.date_order,
                     'picking_type_id': picking_type.id,
@@ -245,19 +238,6 @@ class pos_order(models.Model):
     def check_connection(self, cr, uid, context=None):
         return True
     
-    def get_default_warehouse(self, cr, uid, context=None):
-        company_id = self.pool.get('res.users')._get_company(cr, uid, context=context)
-        warehouse_ids = self.pool.get('stock.warehouse').search(cr, uid, [('company_id', '=', company_id)], context=context)
-        if not warehouse_ids:
-            return False
-        return warehouse_ids[0]
-
-    def get_payment_term(self, cr, uid, context=None):
-        payment_term_id = self.pool.get('account.payment.term').search(cr, uid, [('name', '=', 'Layby')], context=context)
-        if payment_term_id:
-            return payment_term_id[0]
-        return False
-
     def get_default_company(self, cr, uid, context=None):
         company_id = self.pool.get('res.users').browse(cr, uid, uid, context=context).company_id.id
         if not company_id:
@@ -340,8 +320,11 @@ class pos_order(models.Model):
             return False   
         
     def create_from_ui(self, cr, uid, orders, context=None):
-        #TODO if payment is 0, then no need to add payment
-        # Keep only new orders
+        ## overide method to:
+        # - to post order immediately
+        # - to post order payment immediately
+        # - to return custom_name
+        
         submitted_references = [o['data']['name'] for o in orders]
         existing_order_ids = self.search(cr, uid, [('pos_reference', 'in', submitted_references)], context=context)
         existing_orders = self.read(cr, uid, existing_order_ids, ['pos_reference'], context=context)
@@ -386,6 +369,7 @@ class pos_order(models.Model):
 
         for payments in order['statement_ids']:
             amount = payments[2]['amount']
+            ## add payment if amount is > 0
             if amount != 0:
                 self.add_payment(cr, uid, order_id, self._payment_fields(cr, uid, payments[2], context=context), context=context)
 
@@ -411,18 +395,14 @@ class pos_order(models.Model):
             }, context=context)
         return order_id
     
-    
-    #Tahir
-    #TODO - Refactor Code, add sufficient comments
     def pos_customer_payment(self, cr, uid, amount, statement_id, journal_id, partner_id, session_id, ref, context=None):
-        """Create a new payment for the order"""
+        """Create a new payment for customer"""
         context = dict(context or {})
         statement_line_obj = self.pool.get('account.bank.statement.line')
         property_obj = self.pool.get('ir.property')
         partner_obj = self.pool.get('res.partner')
         pos_session_obj = self.pool.get('pos.session')
         pos_customer_payment_obj = self.pool.get('pos.customer.payment')
-        #order = self.browse(cr, uid, order_id, context=context)
         partner = partner_obj.browse(cr, uid, partner_id, context=context)
         session = pos_session_obj.browse(cr, uid, session_id, context=context)
         args = {
@@ -432,13 +412,10 @@ class pos_order(models.Model):
             'partner_id': partner_id and self.pool.get("res.partner")._find_accounting_partner(partner).id or False,
         }
 
-        #journal_id = data.get('journal', False)
-        #statement_id = data.get('statement_id', False)
         assert journal_id or statement_id, "No statement_id or journal_id passed to the method!"
 
         journal = self.pool.get('account.journal').browse(cr, uid, journal_id, context=context)
-        #print journal.company_id
-        #print context
+        
         #use the company of the journal and not of the current user
         company_cxt = dict(context, force_company=journal.company_id.id)
         account_def = property_obj.get(cr, uid, 'property_account_receivable', 'res.partner', context=company_cxt)
@@ -467,7 +444,6 @@ class pos_order(models.Model):
 
         args.update({
             'statement_id': statement_id,
-            #'pos_statement_id': order_id,
             'journal_id': journal_id,
             'ref': session.name,
         })
@@ -497,8 +473,6 @@ class pos_order(models.Model):
             return 
                
         return pos_p.id
-
-        #return statement_id
         
     def customer_payment_via_pos(self, cr, uid, partner_id, journal_id, amount, context=None):
         if context is None:
@@ -804,7 +778,8 @@ class pos_order(models.Model):
                 all_lines.append((0, 0, value),)
         if move_id: #In case no order was changed
             self.pool.get("account.move").write(cr, uid, [move_id], {'line_id':all_lines}, context=context)
-            self.pool.get('account.move').post(cr, uid, [move_id], context=context) #Tahir
+            #post pos sales account moves
+            self.pool.get('account.move').post(cr, uid, [move_id], context=context)  
 
         return True
         

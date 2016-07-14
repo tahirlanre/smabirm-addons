@@ -22,17 +22,16 @@ openerp.ta_pos_enhanced = function(instance){
                 
                 var ss = self.pos.pos_widget.screen_selector;
                 if(ss.get_current_screen() === 'receipt'){
-                    console.warn('TODO should not get there...?');
+                    console.warn('should not get there...?');
                     return;
                 }
                 
                 if(ss.get_current_screen() === 'customer_receipt'){
-                    console.warn('TODO should not get there...?');
+                    console.warn('should not get there...?');
                     return;
                 }
                     
                 self.pos_widget.screen_selector.show_popup('customer-payment-popup');
-               //self.pos_widget.screen_selector.set_current_screen('customer_payment');
             });
 
     },
@@ -404,19 +403,17 @@ openerp.ta_pos_enhanced = function(instance){
             this._super();
 
             this.$el.click(function(){
-                if (self.pos.get('selectedOrder').get('screen') === 'receipt'){  //TODO Why ?
-                    console.warn('TODO should not get there...?');
+                if (self.pos.get('selectedOrder').get('screen') === 'receipt'){  //Why ?
+                    console.warn('should not get there...?');
                     return;
                 }
                 var ss = self.pos_widget.screen_selector;
                 if(ss.get_current_screen() === 'customer_payment'){
                     self.pos.get('selectedOrder').addPaymentline(self.cashregister);
                     self.pos_widget.screen_selector.set_current_screen('customer_payment');
-                    //console.log('Customer Payment');
                 }else{
                     self.pos.get('selectedOrder').addPaymentline(self.cashregister);
-                    self.pos_widget.screen_selector.set_current_screen('payment');
-                    //console.log('Payment');  
+                    self.pos_widget.screen_selector.set_current_screen('payment'); 
                 }
             });
         },
