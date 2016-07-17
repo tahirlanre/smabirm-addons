@@ -8,7 +8,7 @@ openerp.pos_discount_amount = function(instance){
     module.Order = module.Order.extend({
        getSubtotal : function(){
             return round_pr((this.get('orderLines')).reduce((function(sum, orderLine){
-                return sum + orderLine.get_product().list_price;
+                return sum + (orderLine.get_product().list_price * orderLine.get_quantity());
             }), 0), this.pos.currency.rounding);
        },
        getDiscountTotal: function() {
