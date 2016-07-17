@@ -1,5 +1,7 @@
 /*
-    POS Customer payment module for Odoo
+    POS enhancement module for Smabirm Nigeria Limited
+
+	TODO refactor pos customer payment to have seperate model from order
     
 */
 
@@ -792,18 +794,14 @@ openerp.ta_pos_enhanced = function(instance){
             var self = this;
             this._super();
             this.renderElement();
-			/*
-				TODO disable button once clicked
-			*/
-            this.$('.footer #accept').off('click').click(function () {
+			
+            $('.footer #accept').on('click', function (event){
                 if (confirm("Are you sure you want to pay this?") == true) {
                     self.customer_payment_via_pos();
-                }else{
-                    
-                }
-                //$('this').prop("disabled", true);
+					$(this).off(event); //subsequent clicks on Validate button will do nothing
+				}
             });
-            this.$('.footer #cancel').off('click').click(function () {
+            this.$('.footer #cancel').on('click', function () {
                 self.pos_widget.screen_selector.close_popup();
             });
             this.update_input();
