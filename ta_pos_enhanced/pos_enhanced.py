@@ -264,7 +264,7 @@ class pos_order(models.Model):
             picking_id = False
             if picking_type:
                 picking_id = picking_obj.create(cr, uid, {
-                    'origin': order.custom_name,            #change origin to custom_name
+                    'origin': 'POS Invoice/' + order.custom_name,            #change origin to custom_name
                     'partner_id': addr.get('delivery',False),
                     'date_done' : order.date_order,
                     'picking_type_id': picking_type.id,

@@ -747,7 +747,6 @@ openerp.ta_pos_enhanced = function(instance){
 	                                                   }));
 	                                                   self.pos.get('selectedOrder').destroy();    //finish order and go back to scan screen
 	                                                }else{
-	                                                	//FIXME: prevent duplicate orders
 														if(currentOrder.custom_name){
 	                                                		self.pos_widget.screen_selector.set_current_screen(self.next_screen);
 	                                                	}else{
