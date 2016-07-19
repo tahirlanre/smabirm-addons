@@ -21,7 +21,7 @@
 
 import logging
 from openerp import models, fields, api, exceptions
-from openerp.osv import osv
+from openerp.osv import osv, fields
 from openerp.tools import float_is_zero
 from openerp.tools.translate import _
 from openerp import netsvc, tools
@@ -47,10 +47,9 @@ class pos_order(models.Model):
 
 
 
-class pos_order_line(models.Model):
+class pos_order_line(osv.osv):
     _inherit = 'pos.order.line'
 
-    # Tahir
     def onchange_qty(self, cr, uid, ids, product, discount, qty, price_unit, context=None):
         result = {}
         if not product:
@@ -67,7 +66,6 @@ class pos_order_line(models.Model):
         result['price_subtotal_incl'] = taxes['total_included']
         return {'value': result}
 
-    #Tahir
     def _amount_line_all(self, cr, uid, ids, field_names, arg, context=None):
         res = dict([(i, {}) for i in ids])
         account_tax_obj = self.pool.get('account.tax')
@@ -81,3 +79,9 @@ class pos_order_line(models.Model):
             res[line.id]['price_subtotal'] = taxes['total']
             res[line.id]['price_subtotal_incl'] = taxes['total_included']
         return res
+    
+    
+    _columns = {
+        'price_subtotal': fields.function(_amount_line_all, multi='pos_order_line_amount', digits_compute=dp.get_precision('Product Price'), string='Subtotal w/o Tax', store=True),
+        'price_subtotal_incl': fields.function(_amount_line_all, multi='pos_order_line_amount', digits_compute=dp.get_precision('Account'), string='Subtotal', store=True),
+    }
