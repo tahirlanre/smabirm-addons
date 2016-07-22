@@ -237,7 +237,7 @@ class pos_make_payment(osv.osv_memory):
 class pos_order(models.Model):
     _inherit = 'pos.order'
     
-    custom_name = fields.Char(string='Invoice No', required=True, readonly=True, copy=False, help = 'Custom order ref')
+    custom_name = fields.Char(string='Invoice', required=True, readonly=True, copy=False, help = 'Custom order ref')
     
     def create(self, cr, uid, values, context=None):
         

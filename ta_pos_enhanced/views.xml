@@ -64,10 +64,27 @@
         <field name="model">pos.order</field>
 		<field name="inherit_id" ref="point_of_sale.view_pos_order_filter"/>
         <field name="arch" type="xml">
-			<field name="name" position="before">
-				<field name="custom_name" />
-				<field name="partner_id"/>
-			</field>
+			<xpath expr="//search[@string='Search Sales Order']" position="replace">
+				<search string="Search Sales Order">
+					<field name="custom_name" />
+					<field name="partner_id"/>
+                    <field name="name"/>
+                    <field name="date_order"/>
+                    <filter icon="terp-document-new" string="New" domain="[('state','=','draft')]"/>
+                    <filter icon="gtk-apply" string="Done" domain="[('state','in',('paid','invoiced','done'))]"/>
+                    <filter icon="terp-check" string="Invoiced" domain="[('state','=','invoiced')]"/>
+                    <filter icon="gtk-convert" string="Posted" domain="[('state','=','done')]"/>
+                    <field name="user_id"/>
+                    <field name="session_id"/>
+                    <group expand="0" string="Group By">
+                        <filter string="Customer" icon="terp-personal" domain="[]" context="{'group_by':'partner_id'}"/>
+                        <filter string="Salesman" icon="terp-personal" domain="[]" context="{'group_by':'user_id'}"/>
+                        <filter string="Session" icon="terp-personal" domain="[]" context="{'group_by':'session_id'}"/>
+                        <filter string="Status" icon="terp-stock_effects-object-colorize" domain="[]" context="{'group_by':'state'}"/>
+                        <filter string="Order Month" icon="terp-go-month" domain="[]" context="{'group_by':'date_order'}"/>
+                    </group>
+				</search>
+			</xpath>
         </field>
     </record>
 	
@@ -79,7 +96,7 @@
             <xpath expr="//tree[@string='POS Orders']" position="replace">
                 <tree string="POS Orders" colors="blue:state == 'draft';gray:state in ('cancel');black:state not in('cancel')">
                     <field name="custom_name"/>
-                    <field name="pos_reference"/>
+                    <field name="name"/>
                     <field name="partner_id"/>
                     <field name="date_order"/>
                     <field name="user_id"/>
