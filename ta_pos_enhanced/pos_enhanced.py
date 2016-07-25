@@ -406,7 +406,7 @@ class pos_order(models.Model):
         # - to post order immediately
         # - to post order payment immediately
         # - to return custom_name
-        
+       
         submitted_references = [o['data']['name'] for o in orders]
         existing_order_ids = self.search(cr, uid, [('pos_reference', 'in', submitted_references)], context=context)
         existing_orders = self.read(cr, uid, existing_order_ids, ['pos_reference'], context=context)
@@ -414,6 +414,7 @@ class pos_order(models.Model):
         orders_to_save = [o for o in orders if o['data']['name'] not in existing_references]
 
         order_ids = []
+        current_order_name = ''
 
         for tmp_order in orders_to_save:
             order = tmp_order['data']
@@ -427,6 +428,7 @@ class pos_order(models.Model):
                 return False
 
             current_order = self.browse(cr, uid, order_id, context)
+            current_order_name = current_order.custom_name
         
             try:
                 self._create_account_move_line(cr, uid, order_id)
@@ -441,8 +443,7 @@ class pos_order(models.Model):
             except Exception as e:
                 _logger.error('Could not process payment for order: %s', tools.ustr(e))
                 return False
-        
-        current_order_name = current_order.custom_name
+            
         return current_order_name
             
     def _process_order(self, cr, uid, order, context=None):
