@@ -23,7 +23,7 @@
 				<br />
 				<div style="font-style:italic; font-weight:bold"><t t-esc="partner.name"/></div>
 				<table>
-                        <div><t t-esc="order.get('name')"/></div>
+                        <!--<div><t t-esc="order.get('name')"/></div>-->
 						<div><t t-esc="'Date:'+new Date().toString('d-MM-yyyy')"/> <t t-esc="new Date().toString(Date.CultureInfo.formatPatterns.shortTime)"/></div>
                         <div>Served by: <t t-esc="widget.pos.cashier ? widget.pos.cashier.name : widget.pos.user.name"/></div>
 				</table>
