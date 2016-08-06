@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="utf-8"?>
+<openerp>
+    <data noupdate="1">
+		
+		
+        <record id="view_report_pos_customer_payment_graph" model="ir.ui.view">
+            <field name="name">report.pos.customer.payment.graph</field>
+            <field name="model">report.pos.customer.payment</field>
+            <field name="arch" type="xml">
+                <graph string="Point of Sale Payment Analysis" type="bar">
+                    <field name="date" interval="month" type="col"/>
+					<field name="journal_id" type="row"/>
+                    <field name="amount" type="measure"/> 
+                </graph>
+            </field>
+        </record>
+		
+		<record id="view_report_pos_customer_payment_search" model="ir.ui.view">
+            <field name="name">report.pos.customer.payment.search</field>
+            <field name="model">report.pos.customer.payment</field>
+            <field name="arch" type="xml">
+                <search string="Point of Sale Payment Analysis">
+					<field name="date"/>
+                    <separator/>
+                    <filter string="Year" name="year" domain="[('date','&lt;=', time.strftime('%%Y-%%m-%%d')),('date','&gt;=',time.strftime('%%Y-01-01'))]" help="POS ordered created during current year"/>
+                    <separator/>
+                    <group expand="1" string="Group By">
+                        <filter string="Payment Method" name="Journal" context="{'group_by':'journal_id'}"/>
+                        <separator/>
+                        <filter string="Order Month" context="{'group_by':'date:month'}" help="Month of order date"/>
+                    </group>
+                </search>
+            </field>
+			
+		</record>
+		
+        <record id="action_report_pos_customer_payment" model="ir.actions.act_window">
+            <field name="name">Payment Analysis</field>
+            <field name="res_model">report.pos.customer.payment</field>
+            <field name="view_type">form</field>
+            <field name="view_mode">graph</field>
+            <field name="search_view_id" ref="view_report_pos_customer_payment_search"/>
+            <field name="context">{'group_by_no_leaf':1,'group_by':[]}</field>
+        </record>
+
+        <menuitem action="action_report_pos_customer_payment" id="menu_report_pos_customer_payment" parent="point_of_sale.menu_point_rep" sequence="5"/>
+
+    </data>
+</openerp>
