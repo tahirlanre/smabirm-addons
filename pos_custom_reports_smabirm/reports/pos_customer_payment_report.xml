@@ -8,7 +8,7 @@
             <field name="model">report.pos.customer.payment</field>
             <field name="arch" type="xml">
                 <graph string="Point of Sale Payment Analysis" type="bar">
-                    <field name="date" interval="month" type="col"/>
+                    <!--<field name="date" interval="month" type="col"/>-->
 					<field name="journal_id" type="row"/>
                     <field name="amount" type="measure"/> 
                 </graph>
@@ -27,7 +27,7 @@
                     <group expand="1" string="Group By">
                         <filter string="Payment Method" name="Journal" context="{'group_by':'journal_id'}"/>
                         <separator/>
-                        <filter string="Order Month" context="{'group_by':'date:month'}" help="Month of order date"/>
+                        <filter string="Payment Month" context="{'group_by':'date:month'}" help="Month of order date"/>
                     </group>
                 </search>
             </field>
