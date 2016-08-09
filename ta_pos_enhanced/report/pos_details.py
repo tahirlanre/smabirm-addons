@@ -73,10 +73,6 @@ class pos_details_custom(pos_details):
             }
             self.total_paid_order += result['amount_paid']
             data.append(result)
-
-
-
-
         if data:
             return data
         else:
