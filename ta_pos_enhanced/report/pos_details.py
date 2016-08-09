@@ -143,36 +143,42 @@ class pos_details_custom(pos_details):
     def _get_payments(self, form):
         statement_line_obj = self.pool.get("account.bank.statement.line")
         pos_order_obj = self.pool.get("pos.order")
+        pos_payment_obj = self.pool.get("pos.customer.payment")
         user_ids = form['user_ids'] or self._get_all_users()
         company_id = self.pool['res.users'].browse(self.cr, self.uid, self.uid).company_id.id
+        pay_ids = pos_payment_obj.search(self.cr, self.uid, [('payment_date', '>=', form['date_start']), ('payment_date','<=', form['date_end'])])
         pos_ids = pos_order_obj.search(self.cr, self.uid, [('date_order','>=',form['date_start'] + ' 00:00:00'),('date_order','<=',form['date_end'] + ' 23:59:59'),('state','in',['paid','invoiced','done']),('user_id','in',user_ids), ('company_id', '=', company_id)])
         data={}
         if pos_ids:
             st_line_ids = statement_line_obj.search(self.cr, self.uid, [('pos_statement_id', 'in', pos_ids)])
             if st_line_ids:
                 st_id = statement_line_obj.browse(self.cr, self.uid, st_line_ids)
+                p_id = pos_payment_obj.browse(self.cr, self.uid, pay_ids)
+                a_p = []
                 a_l=[]
                 for r in st_id:
                     a_l.append(r['id'])
-                self.cr.execute("select a.id, a.name, sum(sum) from (select aj.id,aj.name, sum(amount) from account_bank_statement_line as absl,account_bank_statement as abs,account_journal as aj "\
-                                "where absl.statement_id = abs.id and abs.journal_id = aj.id and absl.id IN %s and aj.name != 'Discount Journal' "\
-                                "group by aj.id, aj.name union all select aj.id , aj.name, sum(amount) from pos_customer_payment as pos, account_journal as aj where payment_date >= %s and payment_date <= %s and aj.name != 'Discount Journal' and aj.id = pos.journal_id group by aj.id, aj.name) a group by a.id, a.name",(tuple(a_l),form['date_start'],form['date_end'],))
+                for r in p_id:
+                    a_p.append(r['id'])
+                self.cr.execute("select a.id, a.name, sum(sum) from (select aj.id, aj.name,sum(amount) from account_bank_statement_line as absl,account_bank_statement as abs,account_journal as aj " \
+                                "where absl.statement_id = abs.id and abs.journal_id = aj.id  and absl.id IN %s and aj.name != 'Discount Journal '" \
+                                "group by aj.id, aj.name union all select aj.id , aj.name, sum(amount) from pos_customer_payment as pos, account_journal as aj where pos.id IN %s and aj.name != 'Discount Journal' and aj.id = pos.journal_id group by aj.id, aj.name) a group by a.id, a.name",(tuple(a_l),tuple(a_p),))
                 data = self.cr.dictfetchall()
                 for a in data:
                     self.total_paid+=a['sum']
                 return data
-            else:
-                return {}
-        else:
-            pos_payment_obj = self.pool.get("pos.customer.payment")
-            pay_ids = pos_payment_obj.search(self.cr, self.uid, [('payment_date', '>=', form['date_start']), ('payment_date','<=', form['date_end'])])
-            if pay_ids:
-                self.cr.execute("select aj.id , aj.name, sum(amount) from pos_customer_payment as pos, account_journal as aj where payment_date >= '%s' and payment_date <= '%s' and aj.name != 'Discount Journal' and aj.id = pos.journal_id group by aj.id, aj.name" %(form['date_start'],form['date_end']))
-                data = self.cr.dictfetchall()
-                for a in data:
-                    self.total_paid+=a['sum']
-                return data
-            return {}
+        if pay_ids:
+            p_id = pos_payment_obj.browse(self.cr, self.uid, pay_ids)
+            a_p = []
+            for r in p_id:
+                a_p.append(r['id'])
+            self.cr.execute("select aj.id , aj.name, sum(amount) from pos_customer_payment as pos, account_journal as aj where pos.id IN %s and aj.name != 'Discount Journal' and aj.id = pos.journal_id group by aj.id, aj.name ",(tuple(a_p),))
+            data = self.cr.dictfetchall()
+            print data
+            for a in data:
+                self.total_paid+=a['sum']
+            return data
+        return data
 
 
     def _pos_customer_payment(self, form):
