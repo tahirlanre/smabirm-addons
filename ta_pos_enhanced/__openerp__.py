@@ -45,7 +45,8 @@
     'view/report_detailsofsales.xml',
     'wizard/debtors_report.xml',
     'view/report_debtorsreport.xml',
-    'pos_order_sequence.xml'],
+    'pos_order_sequence.xml',
+    'security/ir.model.access.csv'],
     
     'qweb': ['static/src/xml/pos.xml'],
  
