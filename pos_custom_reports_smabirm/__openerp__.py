@@ -32,7 +32,7 @@
    
     'depends': ['point_of_sale'],
     
-    'installable': True,
+    'installable': False,
     
     'data': ['reports/pos_customer_payment_report.xml',
             'reports/pos_order_report.xml'],

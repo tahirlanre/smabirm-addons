@@ -35,17 +35,20 @@ class report_pos_customer_payment(models.Model):
         tools.drop_view_if_exists(cr, self._table)
         cr.execute(
             """CREATE or REPLACE VIEW %s as (
-                (select a.id as id,
+                (select a.id,
                        a.date as date,
                        a.partner_id as partner_id,
                        a.amount as amount,
                        a.journal_id as journal_id
                 from account_bank_statement_line as a 
-                join pos_order s on s.id = a.pos_statement_id
-                group by a.date, a.id, a.partner_id, a.amount, a.journal_id, a.pos_statement_id) union all
-                (select p.id, p.payment_date as date, p.partner_id as partner_id, p.amount as amount, p.journal_id as journal_id
-                from pos_customer_payment p
-                group by p.payment_date, p.id, p.partner_id, p.amount, p.journal_id
+                join pos_order s on s.id = a.pos_statement_id) 
+                union all
+                (select pos.id,
+                        pos.payment_date as date,
+                        pos.partner_id as partner_id,
+                        pos.amount as amount,
+                        pos.journal_id as journal_id
+                from pos_customer_payment as pos       
                 )
             )"""
             % (self._table)
