@@ -68,6 +68,7 @@ class pos_details_custom(pos_details):
 				'lines': pos.lines,
                 'amount_paid': pos.amount_paid,
                 'amount_total': pos.amount_total,
+                'pos_invoice': pos.custom_name,
                 #'uom': pol.product_id.uom_id.name,
 
             }

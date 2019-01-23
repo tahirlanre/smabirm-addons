@@ -53,7 +53,7 @@
                         <t t-foreach="pos_sales_details(data['form'])" t-as="line_ids">
 							<tr>
                             <td colspan="5">
-                               <strong t-esc="formatLang(line_ids['date_order'],date=True)"></strong> - <strong t-esc="line_ids['id']"></strong> - <strong t-esc="line_ids['partner_name']"></strong>
+                               <strong t-esc="formatLang(line_ids['date_order'],date=True)"></strong> - <strong t-esc="line_ids['pos_invoice']"></strong> - <strong t-esc="line_ids['partner_name']"></strong>
                             </td>
 							</tr>
 							<tr t-foreach="pos_sales_d_details(line_ids)" t-as="lines">
