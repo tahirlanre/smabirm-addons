@@ -43,7 +43,7 @@
 				
                 <tr t-foreach="orderlines" t-as="orderline">
                     <div style="font-weight:bold">
-                        <t t-esc="orderline.get_quantity_str_with_unit()"/>  <t t-esc="orderline.get_product().display_name"/> @ <t t-esc="widget.format_currency(orderline.get_product().list_price)"/>                
+                        <t style="padding-left=10px" t-esc="orderline.get_quantity_str_with_unit()"/>  <t t-esc="orderline.get_product().display_name"/> @ <t t-esc="widget.format_currency(orderline.get_product().list_price)"/>                
                     </div>
                     <t t-if="orderline.get_discount() > 0">
                             <div class="pos-disc-font">
