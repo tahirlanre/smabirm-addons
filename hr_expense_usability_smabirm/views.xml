@@ -1,0 +1,15 @@
+<?xml version="1.0"?>
+<openerp>
+  <data>
+  	<record id="view_hr_expense_form_print_ticket" model="ir.ui.view">
+  		  <field name="name">hr.expense.form.print.ticket</field>
+  		  <field name="model">hr.expense.expense</field>
+  		  <field name="inherit_id" ref="hr_expense.view_expenses_form"/>
+  		  <field name="arch" type="xml">
+  			  <xpath expr="//button[@name='action_view_move']" position="after">
+                    <button name="%(hr_expense_ticket)d" string="Print" type="action" states="confirm,accepted,done,paid"/>
+  			  </xpath>
+  		  </field>
+      </record>
+  </data>
+</openerp>

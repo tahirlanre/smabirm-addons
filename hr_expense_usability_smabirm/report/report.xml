@@ -1,0 +1,94 @@
+<?xml version="1.0"?>
+<openerp>
+<data>
+
+    <record id="hr_expense_report_id" model="ir.actions.report.xml">
+        <field name="name">HR Expense Report</field>
+        <field name="type">ir.actions.report.xml</field>
+        <field name="model">hr.expense.report.wizard</field>
+        <field name="report_name">hr_expense_report</field>
+    </record>
+
+    <report id="hr_expense_report_qweb_report"
+                string="HR Expense Report Qweb"
+                model="hr.expense.report.wizard"
+                report_type = "qweb-pdf"
+                file="hr_expense_usability_smabirm.expense_report"
+                name="hr_expense_usability_smabirm.expense_report"  />
+                
+                <template id="expense_report">
+                    <t t-call="report.html_container"> 
+                        <t t-call="report.internal_layout">
+                            <div class="page">
+                                <h2 class = "text-center">Expense Report</h2>
+                                <div class="row mt32">
+                                    <div class="col-xs-3">
+                                        <strong>Company</strong>:<br/>
+                                        <span t-esc="res_company.name"/>
+                                    </div>
+                                   <div class="col-xs-3">
+                                        <strong>Start Period</strong>:<br/>
+                                        <span t-esc="formatLang(data['form']['date_from'],date=True)"/> 
+                                    </div>
+                                    <div class="col-xs-3">
+                                        <strong>End Period</strong>:<br/>
+                                        <span t-esc="formatLang(data['form']['date_to'],date=True)"/> 
+                                    </div>
+                                </div>
+                                <br/>
+                                <table class="table table-condensed">
+                                    <thead>
+                                        <th><strong>Date</strong></th>
+                                        <th><strong>Category</strong></th>
+                                        <th><strong>Description</strong></th>
+                                        <th class="text-right"><strong>Amount</strong></th>
+                                    </thead>
+                                    <tbody>
+                                        <tr t-foreach="expense_line(data['form'])" t-as="line">
+                                            <td>
+                                                <span t-esc="formatLang(line['line_date'], date=True)"/>
+                                            </td>
+                                            <td>
+                                                <span t-esc="line['name']"/>
+                                            </td>
+                                            <td>
+                                                <span t-esc="line['ref']"/>
+                                            </td>
+                                            <td class="text-right">
+                                                <span t-esc="formatLang(line['unit_amount'])"/>
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td><strong>Total</strong></td>
+                                            <td><strong></strong></td>
+                                            <td><strong></strong></td>
+                                            <td class="text-right">
+                                                <strong><t t-esc="formatLang(expense_line_sum(data['form']))"/></strong>
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                                <br/>
+                                
+                                <b>Expenses Summary</b>
+                                <br/>
+                				<div class="row">
+                				  <div class="col-xs-3"><b>Category</b></div> 
+                				  <div class="col-xs-2"><b>Amount</b></div> 
+                				</div>
+                               <t t-foreach="expense_summary(data['form'])" t-as="summary">
+                                    <div class="row">
+                      				  <div class="col-xs-3" style="border-top: 1pt solid grey; text-align=right;">
+                      				      <t t-esc="summary[0]"/>
+                      				  </div> 
+                      				  <div class="col-xs-2" style="border-top: 1pt solid grey; text-align=right;">
+                                          <t t-esc="formatLang(summary[1])"/>
+                                      </div> 
+                                    </div>
+                                </t>
+                            </div>
+                        </t>  
+                    </t> 
+                </template>
+</data>
+</openerp>

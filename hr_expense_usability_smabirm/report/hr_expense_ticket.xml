@@ -1,0 +1,99 @@
+<?xml version="1.0" encoding="utf-8"?>
+<openerp>
+    <data>
+		<template id="line">
+			<p>----------------------------------------</p>
+			
+		</template>
+		<template id="dline">
+			<p>===============================</p>
+		</template>
+		<template id="report">
+			<t t-call="report.html_container">
+			    <t t-foreach="docs" t-as="o">
+				    <div class="page">
+
+<style type="text/css">
+	table{
+	width:100%;
+	}
+    
+    div{
+    font-size: 18px;
+    }
+    
+    table.center {
+        margin-left:auto; 
+        margin-right:auto;
+     }
+     
+</style>
+
+
+				<div class="text-center">
+					<t t-set="company" t-value="o.company_id"/>
+					<img t-if="company.logo" t-att-src="'data:image/png;base64,%s' % company.logo" style="height: 80px;"/>
+				</div>
+
+                    <br/>
+
+					<center><b>EXPENSE RECEIPT</b></center>
+
+                    <br/>
+					<p>
+						<!--Date: <br/>-->
+						<span>User: </span><span t-field="o.user_id"/><br/>
+						<b>Date:</b> <span t-field="o.date"/><br/>
+					</p>
+                    
+					<hr/>
+					<br/>
+					<center><b>Expense Summary</b></center>
+                    <br/>
+                    <t t-call="hr_expense_usability_smabirm.line"/>
+                    <br/>
+                    <table>
+                    <t t-foreach="o.line_ids" t-as="l">
+                        <p>
+                            <b>Expense Type: </b><span t-field="l.product_id.name"/>
+                        </p>
+                        <p>
+                            <b>Note: </b><span t-field="l.name"/>
+                        </p>
+                        <p>
+                            <b>Refrence:</b><span t-field="l.ref"/>
+                        </p>
+                        <p>
+                            <b>Amount: </b><span t-field="l.total_amount"/>
+                        </p> 
+                    </t>
+                </table>
+					<t t-call="hr_expense_usability_smabirm.dline"/>
+					<br/>
+					<br/>
+					<br/>
+					<br/>
+					<center><em>signature</em></center>
+                </div>
+				</t>
+			    </t>
+	</template>
+
+	<report
+    	id="hr_expense_ticket"
+    	model="hr.expense.expense"
+    	string="HR Expense Ticket"
+   	 report_type="qweb-pdf"
+    	name="hr_expense_usability_smabirm.report"
+   	 file="hr_expense_usability_smabirm.report"
+     menu="False"
+        
+/>
+        <record id="hr_expense_ticket" model="ir.actions.report.xml">
+            <field name="paperformat_id" ref="point_of_sale.paperformat_posreceipt"/>
+        </record>
+
+	
+
+    </data>
+</openerp>

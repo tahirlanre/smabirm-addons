@@ -1,0 +1,39 @@
+<?xml version="1.0"?>
+<openerp>
+  <data>
+	<record id="wizard_hr_expense_report" model="ir.ui.view">
+		<field name="name">wizard.hr.expense.report</field>
+		<field name="model">hr.expense.report.wizard</field>
+		<field name="type">form</field>
+		<field name="arch" type="xml">
+			<form string="Report Options">
+				
+				<group col="2" colspan="2">
+					
+					<field name="date_from" />
+					<field name="date_to" />
+					
+                      <newline />
+                      <button string="Cancel" special="cancel" icon="gtk-cancel" />
+                      <button name="print_report" string="Print" type="object" icon="gtk-print" default_focus="1" />
+                      
+                  </group>
+			</form>
+		</field>
+	</record>
+
+    <record id="action_wizard_hr_expense_report" model="ir.actions.act_window">
+          <field name="name">HR Expense Report</field>
+          <field name="type">ir.actions.act_window</field>
+          <field name="res_model">hr.expense.report.wizard</field>
+          <field name="res_model">hr.expense.report.wizard</field>
+		<field name="view_type">form</field>
+		<field name="view_mode">form</field>
+		<field name="target">new</field>
+      </record>
+      <menuitem action="action_wizard_hr_expense_report"
+                id="menu_action_wizard_hr_expense_report"
+                parent="hr.menu_hr_reporting" sequence="3" />
+      
+  </data>
+</openerp>
