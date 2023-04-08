@@ -605,22 +605,24 @@ openerp.ta_pos_enhanced = function(instance){
             var currentOrderLines = this.pos.get('selectedOrder').get('orderLines');
             var item_count = 0;
 			var client = currentOrder.get_client();
+            var stock_location = self.pos.config.stock_location_id[0]
 			
             if (currentOrderLines.length > 0) {
                 new instance.web.Model("pos.order").get_func("check_connection")().done(function(connection) {
                     if (connection) {
                         (currentOrderLines).each(_.bind( function(item) {
-                            new instance.web.Model("product.product").get_func("search_read")(
-                                                    [['id', '=', item.get_product().id]], ['qty_available']).pipe(
+                            new instance.web.Model("product.product").get_func("get_product_qty_by_location")(item.get_product().id, stock_location).pipe(
                                 function(result) {
-                                    if (result && result[0]) {
+        
+                                    if (result && result.qty_available ) {
+                                        console.log(result)
                                         var quantity = 0;
                                             (currentOrderLines).each(_.bind( function(line) {
-                                            if (result[0].id == line.get_product().id && line.get_product().type != 'service') {
+                                            if (result.product_id == line.get_product().id && line.get_product().type != 'service') {
                                                 quantity += line.get_quantity();
                                             }
                                         }, this));
-                                        if (quantity > result[0].qty_available && item.get_product().type != 'service'){
+                                        if (quantity > result.qty_available && item.get_product().type != 'service'){
                                             alert ('Not enough stock for product "' + item.get_product().display_name + '"');
                                             return;
                                         } else {

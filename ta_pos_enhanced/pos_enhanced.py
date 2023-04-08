@@ -788,3 +788,20 @@ class pos_order(models.Model):
 
         return True
         
+
+class product_product(models.Model):
+    _inherit = 'product.product'
+
+    def get_product_qty_by_location(self, cr, uid, product_id, location_id):
+        stock_quant_obj = self.pool.get('stock.quant')
+
+        record_ids = stock_quant_obj.search(cr, uid, [['product_id', '=', product_id], ['location_id', '=', location_id]])
+        records = stock_quant_obj.browse(cr, uid, record_ids)
+
+        qty_available = sum([rec.qty for rec in records])
+
+        res = {"product_id": product_id, "qty_available": qty_available}
+
+        return res
+
+    
